@@ -47,10 +47,10 @@ export default function Navbar({ mode = "default" }) {
   return (
     <>
       <header
-        className={`sticky top-5 z-40 mx-auto transition-all duration-500 ease-in-out py-4 px-2 ${
+        className={`sticky top-5 z-40 mx-auto transition-all duration-500 ease-in-out py-2 md:py-4 px-2 ${
           scrolled
-            ? "max-w-5xl bg-background/80 backdrop-blur-md rounded-4xl shadow-md"
-            : "max-w-6xl bg-none border-none rounded-none mt-0 shadow-none"
+            ? "max-w-[90%] md:max-w-5xl bg-background/80 backdrop-blur-md rounded-4xl shadow-md"
+            : "max-w-[95%] bg-none border-none rounded-none mt-0 shadow-none"
         }`}
       >
         <div
@@ -61,7 +61,7 @@ export default function Navbar({ mode = "default" }) {
           <Link
             href="/"
             className={`font-extrabold tracking-tight transition-all duration-300 ${
-              scrolled ? "text-primary/90 text-lg" : "text-black text-xl"
+              scrolled ? "text-primary/90 text-xl" : "text-black text-2xl"
             }`}
           >
             myLove
