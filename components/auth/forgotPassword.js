@@ -52,7 +52,7 @@ export default function ForgotPasswordPage() {
       if (!res.ok) throw new Error(data.error || "Gagal mengubah password");
 
       setMessage("Password berhasil diubah! Mengalihkan ke login...");
-      setTimeout(() => router.push("/auth/login"), 2000);
+      setTimeout(() => router.push("/auth"), 2000);
     } catch (err) {
       setMessage(err.message);
     } finally {
