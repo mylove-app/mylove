@@ -20,6 +20,7 @@ model User {
   email     String  @unique
   password  String
   otp       Otp[]
+  sites     Site[] 
 }
 
 model Otp {
@@ -32,10 +33,13 @@ model Otp {
 }
 
 
-model Domain {
+model Site {
   id         Int      @id @default(autoincrement())
   name       String
-  active     Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  expiredAt  DateTime // batas waktu domain
+  subdomain  String   @unique
+  template   String
+  content    Json?
+  userId     Int      // foreign key
+  user       User     @relation(fields: [userId], references: [id])
 }
+

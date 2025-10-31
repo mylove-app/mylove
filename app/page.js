@@ -1,6 +1,9 @@
 import Hero from "@/components/dashboard/hero";
+import AppShell from "@/components/layout/appShell";
 export default function RootPage() {
   return (
-    <Hero />
+    <AppShell>
+      <Hero />
+    </AppShell>
   );
 }
