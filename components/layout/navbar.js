@@ -106,7 +106,9 @@ export default function Navbar({ mode = "default" }) {
                   {user.name.charAt(0).toUpperCase()}
                 </div>
                 <span className="text-sm font-medium text-slate-800">
-                  {user.name}
+                  {user.name.length > 8
+                    ? user.name.slice(0, 8) + "..."
+                    : user.name}
                 </span>
               </button>
               {dropdownOpen && (
@@ -184,7 +186,9 @@ export default function Navbar({ mode = "default" }) {
                     {user.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="text-sm font-bold text-slate-800">
-                    {user.name}
+                    {user.name.length > 8
+                      ? user.name.slice(0, 8) + "..."
+                      : user.name}
                   </div>
                   <div className="text-xs text-slate-600">{user.email}</div>
                 </div>

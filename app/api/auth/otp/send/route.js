@@ -5,21 +5,32 @@ import { sendEmail } from "@/lib/sendEmail";
 export async function POST(req) {
   try {
     const { email } = await req.json();
+
+    // 🔍 Cek user berdasarkan email
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
       return Response.json({ error: "User tidak ditemukan" }, { status: 404 });
     }
 
+    // 🔢 Generate OTP & waktu kedaluwarsa
     const code = generateOTP();
-    const expiresAt = otpExpiry(5);
+    const expiresAt = otpExpiry(5); // 5 menit
 
-    await prisma.otp.create({
-      data: { code, expiresAt, userId: user.id },
+    // 💾 Simpan langsung ke tabel User
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        otpCode: code,
+        otpExpires: expiresAt,
+        otpVerified: false,
+      },
     });
 
+    // 📧 Kirim email verifikasi OTP
     const subject = "Kode OTP Verifikasi";
     const text = `Halo ${user.name},\n\nKode OTP kamu adalah: ${code}\nKode ini berlaku selama 5 menit.\n\nTerima kasih.`;
+
     const html = `
     <div style="
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -69,10 +80,15 @@ export async function POST(req) {
       </p>
     </div>
     `;
+
     await sendEmail(email, subject, { text, html });
 
-    return Response.json({ message: "OTP telah dikirim ke email" }, { status: 200 });
+    return Response.json(
+      { message: "OTP telah dikirim ke email kamu" },
+      { status: 200 }
+    );
   } catch (err) {
-    return Response.json({ error: "Server Error" }, { status: 500 });
+    console.error(err);
+    return Response.json({ error: "Terjadi kesalahan server" }, { status: 500 });
   }
 }
