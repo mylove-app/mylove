@@ -2,9 +2,10 @@ import { templates } from "@/components/template";
 
 export default async function SitePage({ params }) {
   const { subdomain } = await params;
+  const API_URL = process.env.NEXT_PUBLIC_BASE_API || "http://localhost:3000";
 
   // gunakan absolute URL agar aman di server
-  const res = await fetch(`http://localhost:3000/api/sites/${subdomain}`, {
+  const res = await fetch(`${API_URL}/api/sites/${subdomain}`, {
     cache: "no-store",
   });
 
