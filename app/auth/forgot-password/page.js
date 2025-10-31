@@ -1,5 +1,12 @@
+"use client";
+
+import { Suspense } from "react";
 import ForgotPasswordPage from "@/components/auth/forgotPassword";
 
 export default function ForgotPassword() {
-  return <ForgotPasswordPage />;
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ForgotPasswordPage />
+    </Suspense>
+  );
 }
