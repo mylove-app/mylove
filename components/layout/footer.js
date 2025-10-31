@@ -11,12 +11,10 @@ export default function Footer() {
   return (
     <footer className="bg-background border-t-2 border-primary text-foreground py-10">
       <div className="max-w-6xl mx-auto px-4 text-center flex flex-col items-center">
-        {/* Logo / Brand */}
         <h2 className="text-2xl font-bold text-foreground mb-6">
           myLove<span className="text-primary">.</span>
         </h2>
 
-        {/* Navigation Menu */}
         <ul className="flex flex-wrap justify-center gap-6 text-sm mb-6">
           {menus.map((menu) => (
             <li key={menu.name}>
@@ -27,9 +25,7 @@ export default function Footer() {
           ))}
         </ul>
 
-        {/* Social Media */}
         <div className="flex gap-6 justify-center mb-6">
-          {/* TikTok */}
           <Link
             href="#"
             aria-label="TikTok"
@@ -45,7 +41,6 @@ export default function Footer() {
             </svg>
           </Link>
 
-          {/* Instagram */}
           <Link
             href="#"
             aria-label="Instagram"
@@ -61,7 +56,6 @@ export default function Footer() {
             </svg>
           </Link>
 
-          {/* WhatsApp */}
           <Link
             href="#"
             aria-label="WhatsApp"
@@ -78,7 +72,6 @@ export default function Footer() {
           </Link>
         </div>
 
-        {/* Copyright */}
         <div className="border-t border-gray-800 pt-5 text-xs text-gray-500 w-full">
           © {new Date().getFullYear()} myLove. All rights reserved.
         </div>
