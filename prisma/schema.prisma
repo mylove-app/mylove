@@ -37,6 +37,20 @@ model Site {
   expiredAt  DateTime?
 }
 
+model Template {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  texts       Int      
+  images      Int      
+  description String?
+  image       String[]
+  category    String[]
+  price       String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+
 model Subscription {
   id     Int   @id @default(autoincrement())
   userId Int   @unique

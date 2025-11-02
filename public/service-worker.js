@@ -29,21 +29,22 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      if (response) return response;
-
-      return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== "basic") {
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse.status === 404) {
+          event.waitUntil(
+            caches.open(CACHE_NAME).then((cache) => cache.delete(event.request))
+          );
           return networkResponse;
         }
-
-        const responseToCache = networkResponse.clone();
+        const responseClone = networkResponse.clone();
         event.waitUntil(
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache))
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone))
         );
-
         return networkResponse;
-      });
-    })
+      })
+      .catch(() => {
+        return caches.match(event.request);
+      })
   );
 });

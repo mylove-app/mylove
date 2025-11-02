@@ -1,40 +1,43 @@
-export async function GET(req, { params }) {
-  const { subdomain } =await params;
+import prisma from "@/lib/prisma";
 
-  const dummySites = [
-    {
-      subdomain: "tokomawar",
-      template: "template1",
-      content: {
-        title: "Toko Mawar",
-        description: "Menjual bunga segar setiap hari 🌹",
-        images: [
-          "https://picsum.photos/400/300?1",
-          "https://picsum.photos/400/300?2",
-        ],
-      },
-    },
-    {
-      subdomain: "kopikenangan",
-      template: "template4",
-      content: {
-        title: "Kopi Kenangan",
-        description: "Tempat terbaik untuk ngopi bareng teman ☕",
-        images: [
-          "https://picsum.photos/400/300?3",
-          "https://picsum.photos/400/300?4",
-          "https://picsum.photos/400/300?5",
-        ],
-      },
-    },
-  ];
+export async function GET() {
+  try {
+    const sites = await prisma.site.findMany({
+      include: { user: true },
+      orderBy: { id: "desc" },
+    });
 
-  // 🔍 Cari site berdasarkan subdomain
-  const site = dummySites.find((s) => s.subdomain === subdomain);
-
-  if (!site) {
-    return Response.json({ error: "Website tidak ditemukan" }, { status: 404 });
+    return Response.json(sites, { status: 200 });
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
   }
+}
 
-  return Response.json(site);
+export async function POST(req) {
+  try {
+    const body = await req.json();
+    const { name, subdomain, template, content, userId, expiredAt } = body;
+
+    if (!name || !subdomain || !template || !userId) {
+      return Response.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    const newSite = await prisma.site.create({
+      data: {
+        name,
+        subdomain,
+        template,
+        content,
+        userId,
+        expiredAt: expiredAt ? new Date(expiredAt) : null,
+      },
+    });
+
+    return Response.json(newSite, { status: 201 });
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
+  }
 }

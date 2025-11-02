@@ -1,4 +1,5 @@
 import { templates } from "@/components/template";
+import NotFound from "@/app/not-found";
 
 export default async function SitePage({ params }) {
   const { subdomain } = await params;
@@ -10,7 +11,7 @@ export default async function SitePage({ params }) {
   });
 
   if (!res.ok) {
-    return <h1 className="text-center mt-10">Website tidak ditemukan</h1>;
+    return <NotFound />;
   }
 
   const site = await res.json();

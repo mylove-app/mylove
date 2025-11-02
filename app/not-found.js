@@ -12,7 +12,7 @@ export default function NotFound() {
         Maaf, halaman yang kamu cari tidak tersedia atau telah dipindahkan.
       </p>
 
-      <Button label="Kembali ke Beranda" href="/" />
+      <Button label="Kembali ke Beranda" href={`${process.env.NEXT_PUBLIC_BASE_API}/` || "/"} />
     </main>
   );
 }
