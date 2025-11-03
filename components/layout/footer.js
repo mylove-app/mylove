@@ -2,10 +2,9 @@ import Link from "next/link";
 
 export default function Footer() {
   const menus = [
-    { name: "Beranda", path: "/" },
-    { name: "Tentang", path: "/tentang" },
-    { name: "Layanan", path: "/layanan" },
-    { name: "Kontak", path: "/kontak" },
+    { name: "Beranda", path: "/#beranda" },
+    { name: "template", path: "/#template"},
+    { name: "Kategori", path: "/kategori"},
   ];
 
   return (

@@ -1,12 +1,13 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Home, Heart, Package, Settings, Menu, X, Tag } from "lucide-react";
+import { Home, Package, Tag, Menu, X, ArrowLeft } from "lucide-react";
 import variable from "@/lib/variable";
 
-export default function Navbar({ mode = "default" }) {
+export default function Navbar({ mode = "default", backHref = "/" }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(false);
@@ -40,19 +41,19 @@ export default function Navbar({ mode = "default" }) {
     setTimeout(() => setSidebarOpen(false), 300);
   };
 
-  const menuItems = [
-    { name: "Beranda", href: "/", icon: <Home size={18} /> },
-    { name: "Wishlist", href: "/wishlist", icon: <Heart size={18} /> },
-    { name: "Kategori", href: "/kategori", icon: <Tag size={18} /> },
-    { name: "Produk", href: "/produk/kelola", icon: <Package size={18} /> },
-    { name: "Settings", href: "/settings", icon: <Settings size={18} /> },
-  ];
   const handleLogout = async () => {
     try {
       await fetch(variable.logout, { method: "POST" });
       window.location.href = "/auth";
     } catch {}
   };
+
+  const menuItems = [
+    { name: "Beranda", href: "/#beranda", icon: <Home size={18} /> },
+    { name: "Template", href: "/#template", icon: <Package size={18} /> },
+    { name: "Kategori", href: "/kategori", icon: <Tag size={18} /> },
+  ];
+
   return (
     <>
       <header
@@ -62,85 +63,99 @@ export default function Navbar({ mode = "default" }) {
             : "max-w-[95%] bg-none border-none rounded-none mt-0 shadow-none"
         }`}
       >
-        <div
-          className={`px-4 flex items-center justify-between transition-all duration-500 ${
-            scrolled ? "py-2" : "py-3"
-          }`}
-        >
-          <Link
-            href="/"
-            className={`font-extrabold tracking-tight transition-all duration-300 ${
-              scrolled ? "text-primary/90 text-xl" : "text-black text-2xl"
+        {/* 🔹 MODE DEFAULT */}
+        {mode === "default" && (
+          <div
+            className={`px-4 flex items-center justify-between transition-all duration-500 ${
+              scrolled ? "py-2" : "py-3"
             }`}
           >
-            myLove
-          </Link>
+            <Link
+              href="/"
+              className={`font-extrabold tracking-tight transition-all duration-300 ${
+                scrolled ? "text-primary/90 text-xl" : "text-black text-2xl"
+              }`}
+            >
+              myLove
+            </Link>
 
-          {/* 🔹 Menu Desktop */}
-          <div className="hidden md:flex items-center gap-4">
-            <nav className="flex items-center gap-4 text-sm font-medium">
-              {menuItems.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`inline-flex items-center gap-1 transition-colors hover:text-primary/90 ${
-                    pathname === item.href
-                      ? "text-primary font-semibold"
-                      : "text-slate-700"
-                  }`}
-                >
-                  {item.icon}
-                  {item.name}
-                </Link>
-              ))}
-            </nav>
-          </div>
-
-          {user ? (
-            <div className="relative ml-4 hidden md:block">
-              <button
-                className="flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-1 hover:shadow transition-shadow"
-                onClick={() => setDropdownOpen((prev) => !prev)}
-              >
-                <div className="w-8 h-8 rounded-full bg-primary text-background flex items-center justify-center font-semibold">
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
-                <span className="text-sm font-medium text-slate-800">
-                  {user.name.length > 8
-                    ? user.name.slice(0, 8) + "..."
-                    : user.name}
-                </span>
-              </button>
-              {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-36 bg-white border border-slate-200 rounded shadow-md z-50">
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded"
+            {/* 🔹 Menu Desktop */}
+            <div className="hidden md:flex items-center gap-4">
+              <nav className="flex items-center gap-4 text-sm font-medium">
+                {menuItems.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className="inline-flex items-center gap-1 transition-colors hover:text-primary/90 text-slate-700"
                   >
-                    Logout
-                  </button>
-                </div>
-              )}
+                    {item.icon}
+                    {item.name}
+                  </Link>
+                ))}
+              </nav>
             </div>
-          ) : (
-            <div className="ml-4 hidden md:block">
-              <a
-                href="/auth"
-                className="px-4 py-2 text-sm font-semibold bg-primary text-background rounded hover:bg-primary/90"
-              >
-                Login
-              </a>
-            </div>
-          )}
 
-          {/* 🔹 Tombol Menu Mobile */}
-          <button onClick={openSidebar} className="md:hidden p-2">
-            <Menu size={22} />
-          </button>
-        </div>
+            {/* 🔹 User / Login */}
+            {user ? (
+              <div className="relative ml-4 hidden md:block">
+                <button
+                  className="flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-1 hover:shadow transition-shadow"
+                  onClick={() => setDropdownOpen((prev) => !prev)}
+                >
+                  <div className="w-8 h-8 rounded-full bg-primary text-background flex items-center justify-center font-semibold">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="text-sm font-medium text-slate-800">
+                    {user.name.length > 8
+                      ? user.name.slice(0, 8) + "..."
+                      : user.name}
+                  </span>
+                </button>
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-36 bg-white border border-slate-200 rounded shadow-md z-50">
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="ml-4 hidden md:block">
+                <a
+                  href="/auth"
+                  className="px-4 py-2 text-sm font-semibold bg-primary text-background rounded hover:bg-primary/90"
+                >
+                  Login
+                </a>
+              </div>
+            )}
+
+            {/* 🔹 Tombol Menu Mobile */}
+            <button onClick={openSidebar} className="md:hidden p-2">
+              <Menu size={22} />
+            </button>
+          </div>
+        )}
+
+        {/* 🔹 MODE KEMBALI */}
+        {mode === "kembali" && (
+          <div className="flex items-center px-4 py-2 gap-3">
+            <button
+              onClick={() => router.back()}
+              className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
+            >
+              <ArrowLeft size={22} />
+              <span className="font-bold text-sm">Kembali</span>
+            </button>
+          </div>
+        )}
       </header>
 
-      {sidebarOpen && (
+      {/* 🔹 SIDEBAR MOBILE (mode default) */}
+      {mode === "default" && sidebarOpen && (
         <div
           className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
           onClick={handleCloseSidebar}

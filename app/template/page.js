@@ -61,7 +61,6 @@ export default function AddTemplateForm() {
       alert("Template berhasil ditambahkan!");
       setForm(empty);
     } catch (err) {
-      console.error(err);
       alert("Gagal menambahkan template");
     } finally {
       setSaving(false);

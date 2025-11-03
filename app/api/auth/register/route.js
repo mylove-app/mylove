@@ -3,7 +3,7 @@ import { hashPassword } from "@/lib/hash";
 
 export async function POST(req) {
   try {
-    const { name, email, password } = await req.json();
+    const { name, email, password, role } = await req.json();
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
@@ -13,7 +13,7 @@ export async function POST(req) {
     const hashed = await hashPassword(password);
 
     const user = await prisma.user.create({
-      data: { name, email, password: hashed },
+      data: { name, email, password: hashed,role },
     });
 
     return Response.json({ message: "Registrasi berhasil" }, { status: 201 });

@@ -62,7 +62,6 @@ export async function PUT(req, { params }) {
       { status: 200 }
     );
   } catch (err) {
-    console.error(err);
     return Response.json({ error: "Server Error" }, { status: 500 });
   }
 }
@@ -98,7 +97,6 @@ export async function DELETE(req, { params }) {
     if (err.code === "P2025") {
       return Response.json({ error: "User tidak ditemukan" }, { status: 404 });
     }
-    console.error(err);
     return Response.json({ error: "Server Error" }, { status: 500 });
   }
 }

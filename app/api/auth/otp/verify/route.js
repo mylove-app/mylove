@@ -41,7 +41,6 @@ export async function POST(req) {
       { status: 200 }
     );
   } catch (err) {
-    console.error(err);
     return Response.json({ error: "Server Error" }, { status: 500 });
   }
 }

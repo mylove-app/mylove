@@ -25,7 +25,6 @@ const auth = async () => {
 
     return { userId: user.id };
   } catch (error) {
-    console.error("Auth error:", error);
     return null;
   }
 };

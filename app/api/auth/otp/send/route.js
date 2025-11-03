@@ -5,19 +5,15 @@ import { sendEmail } from "@/lib/sendEmail";
 export async function POST(req) {
   try {
     const { email } = await req.json();
-
-    // 🔍 Cek user berdasarkan email
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
       return Response.json({ error: "User tidak ditemukan" }, { status: 404 });
     }
 
-    // 🔢 Generate OTP & waktu kedaluwarsa
     const code = generateOTP();
-    const expiresAt = otpExpiry(5); // 5 menit
+    const expiresAt = otpExpiry(5);
 
-    // 💾 Simpan langsung ke tabel User
     await prisma.user.update({
       where: { id: user.id },
       data: {
@@ -27,7 +23,6 @@ export async function POST(req) {
       },
     });
 
-    // 📧 Kirim email verifikasi OTP
     const subject = "Kode OTP Verifikasi";
     const text = `Halo ${user.name},\n\nKode OTP kamu adalah: ${code}\nKode ini berlaku selama 5 menit.\n\nTerima kasih.`;
 
@@ -88,7 +83,6 @@ export async function POST(req) {
       { status: 200 }
     );
   } catch (err) {
-    console.error(err);
     return Response.json({ error: "Terjadi kesalahan server" }, { status: 500 });
   }
 }

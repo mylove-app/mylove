@@ -27,41 +27,38 @@ export default function Template() {
   const [page, setPage] = useState(1);
   const [hasMoreData, setHasMoreData] = useState(true);
 
-  // Ambil data template dari server (20 per page)
   async function fetchTemplates(pageNum = 1) {
     try {
       setLoading(true);
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_API || ""}/api/template?page=${pageNum}&limit=20`,
+        `${
+          process.env.NEXT_PUBLIC_BASE_API || ""
+        }/api/template?page=${pageNum}&limit=20`,
         { cache: "no-store" }
       );
       const data = await res.json();
 
       if (Array.isArray(data) && data.length > 0) {
         setTemplates((prev) => [...prev, ...data]);
-        setHasMoreData(data.length === 20); // kalau kurang dari 20 berarti data habis
+        setHasMoreData(data.length === 20);
       } else {
         setHasMoreData(false);
       }
     } catch (err) {
-      console.error("Gagal memuat template:", err);
     } finally {
       setLoading(false);
     }
   }
 
-  // Ambil data pertama saat load
   useEffect(() => {
     fetchTemplates(1);
   }, []);
 
-  // Ambil kategori unik
   const categories = [
     "Semua",
     ...new Set(templates.flatMap((t) => t.category || []).filter(Boolean)),
   ];
 
-  // Filter berdasarkan pencarian dan kategori
   const filteredTemplates = templates.filter((template) => {
     const matchesSearch = template.name
       .toLowerCase()
@@ -75,7 +72,6 @@ export default function Template() {
   const visibleTemplates = filteredTemplates.slice(0, visibleCount);
   const hasMoreVisible = visibleCount < filteredTemplates.length;
 
-  // Tombol "Tampilkan Lebih Banyak"
   const handleLoadMore = () => {
     if (hasMoreVisible) {
       setVisibleCount((prev) => prev + 20);
@@ -87,8 +83,7 @@ export default function Template() {
   };
 
   return (
-    <main className="p-6">
-      {/* Search + Filter */}
+    <main className="p-6" id="template">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-3">
         <div className="relative w-full md:w-1/3">
           <Search
@@ -103,28 +98,28 @@ export default function Template() {
             className="w-full border border-gray-300 rounded-full pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
-
-        <div className="flex flex-wrap items-center gap-2 mt-2 md:mt-0">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => {
-                setSelectedCategory(cat);
-                setVisibleCount(20);
-              }}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                selectedCategory === cat
-                  ? "bg-primary text-white border-primary"
-                  : "bg-white text-gray-700 border-gray-300 hover:bg-primary/10"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+        <div className="relative w-full overflow-x-auto scrollbar-hide">
+          <div className="flex items-center gap-2 min-w-max pb-2 md:justify-end scrollbar-hide">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => {
+                  setSelectedCategory(cat);
+                  setVisibleCount(20);
+                }}
+                className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                  selectedCategory === cat
+                    ? "bg-primary text-white border-primary"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-primary/10"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Template Grid */}
       {loading && templates.length === 0 ? (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -140,9 +135,10 @@ export default function Template() {
               <TemplateCard key={template.id} template={template} />
             ))}
 
-            {/* Loading tambahan saat ambil data page berikutnya */}
             {loading &&
-              Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={`s-${i}`} />)}
+              Array.from({ length: 4 }).map((_, i) => (
+                <SkeletonCard key={`s-${i}`} />
+              ))}
           </div>
 
           {(hasMoreVisible || hasMoreData) && (
