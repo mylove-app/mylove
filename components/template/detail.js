@@ -53,7 +53,7 @@ export default function TemplateDetail() {
   return (
     <div className="max-w-6xl mx-auto px-6 pt-4 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
       <div>
-        <div className="relative w-full h-[300px] bg-gray-100 rounded-xl overflow-hidden">
+        <div className="relative w-full h-full md:h-[300px] bg-gray-100 rounded-xl overflow-hidden">
           {images[activeImage] ? (
             <Image
               src={images[activeImage]}
@@ -63,7 +63,13 @@ export default function TemplateDetail() {
             />
           ) : (
             <div className="flex items-center justify-center h-full text-gray-400">
-              Tidak ada gambar
+              <Image
+                src="/no-image.png"
+                alt="No Image"
+                width={200}
+                height={200}
+                className="w-full h-full object-cover"
+              />
             </div>
           )}
         </div>
