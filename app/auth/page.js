@@ -5,7 +5,7 @@ import LoginPage from "@/components/auth/login";
 import RegisterPage from "@/components/auth/register";
 
 export default function AuthPage() {
-  const [mode, setMode] = useState("login"); // "login" atau "register"
+  const [mode, setMode] = useState("login");
 
   const toggleMode = () => {
     setMode((prev) => (prev === "login" ? "register" : "login"));

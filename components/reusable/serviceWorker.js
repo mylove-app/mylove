@@ -17,5 +17,5 @@ export default function ServiceWorkerRegister() {
     }
   }, []);
 
-  return null; // tidak render apa pun
+  return null;
 }

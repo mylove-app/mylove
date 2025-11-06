@@ -4,8 +4,6 @@ import NotFound from "@/app/not-found";
 export default async function SitePage({ params }) {
   const { subdomain } = await params;
   const API_URL = process.env.NEXT_PUBLIC_BASE_API || "http://localhost:3000";
-
-  // gunakan absolute URL agar aman di server
   const res = await fetch(`${API_URL}/api/site/${subdomain}`, {
     cache: "no-store",
   });

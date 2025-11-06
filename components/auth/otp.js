@@ -13,7 +13,6 @@ export default function OtpPage() {
   const [loadingVerify, setLoadingVerify] = useState(false);
   const [message, setMessage] = useState("");
 
-  // --- Kirim OTP ke email ---
   const handleSendOtp = async (e) => {
     e.preventDefault();
     setLoadingSend(true);
@@ -37,7 +36,6 @@ export default function OtpPage() {
     }
   };
 
-  // --- Verifikasi OTP ---
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     setLoadingVerify(true);
@@ -72,7 +70,6 @@ export default function OtpPage() {
           Verifikasi Email
         </h1>
 
-        {/* Form utama */}
         <form className="space-y-4" onSubmit={handleVerifyOtp}>
           <div>
             <InputAuth

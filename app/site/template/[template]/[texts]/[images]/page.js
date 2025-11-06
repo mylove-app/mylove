@@ -19,7 +19,6 @@ export default function TemplatePageClient() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  // reset form jika jumlah teks/images berubah
   useEffect(() => {
     setForm({
       name: "",

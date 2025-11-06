@@ -3,7 +3,7 @@
 import { useState } from "react";
 import axios from "axios";
 import Image from "next/image";
-import ImageUploadButton from "@/components/reusable/imageUpload"; // path sesuai proyek
+import ImageUploadButton from "@/components/reusable/imageUpload";
 
 export default function AddTemplateForm() {
   const empty = {
@@ -74,7 +74,6 @@ export default function AddTemplateForm() {
     >
       <h2 className="text-lg font-semibold">Tambah Template</h2>
 
-      {/* Nama Template */}
       <Input
         label="Nama Template"
         value={form.name}
@@ -82,7 +81,6 @@ export default function AddTemplateForm() {
         required
       />
 
-      {/* Jumlah teks */}
       <Input
         label="Jumlah Teks"
         type="number"
@@ -92,7 +90,6 @@ export default function AddTemplateForm() {
         }
       />
 
-      {/* Jumlah gambar */}
       <Input
         label="Jumlah Gambar"
         type="number"
@@ -102,7 +99,6 @@ export default function AddTemplateForm() {
         }
       />
 
-      {/* Deskripsi */}
       <div>
         <label className="block text-sm text-slate-600 mb-1">Deskripsi</label>
         <textarea
@@ -114,7 +110,6 @@ export default function AddTemplateForm() {
         />
       </div>
 
-      {/* Category */}
       <div>
         <label className="block text-sm text-slate-600 mb-1">Kategori</label>
         {form.category.map((cat, i) => (
@@ -145,7 +140,6 @@ export default function AddTemplateForm() {
         </button>
       </div>
 
-      {/* Price */}
       <div>
         <label className="block text-sm text-slate-600 mb-1">Harga (3 Tingkatan)</label>
         {form.price.map((p, i) => (
@@ -162,7 +156,6 @@ export default function AddTemplateForm() {
         ))}
       </div>
 
-      {/* Upload Gambar */}
       <div>
         <label className="block text-sm mb-1 text-slate-600">Upload Gambar</label>
         <ImageUploadButton
@@ -206,7 +199,6 @@ export default function AddTemplateForm() {
   );
 }
 
-// Reusable Input
 function Input({ label, className = "", ...props }) {
   return (
     <div className={className}>

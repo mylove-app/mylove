@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 
 export async function GET(req, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const template = await prisma.template.findUnique({
       where: { id: parseInt(id) },
     });
@@ -19,7 +19,7 @@ export async function GET(req, { params }) {
 
 export async function PUT(req, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const { name, texts, images, description, image, category, price } =
       await req.json();
 
@@ -44,7 +44,7 @@ export async function PUT(req, { params }) {
 
 export async function DELETE(req, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     await prisma.template.delete({
       where: { id: parseInt(id) },

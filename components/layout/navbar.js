@@ -63,7 +63,6 @@ export default function Navbar({ mode = "default", backHref = "/" }) {
             : "max-w-[95%] bg-none border-none rounded-none mt-0 shadow-none"
         }`}
       >
-        {/* 🔹 MODE DEFAULT */}
         {mode === "default" && (
           <div
             className={`px-4 flex items-center justify-between transition-all duration-500 ${
@@ -79,7 +78,6 @@ export default function Navbar({ mode = "default", backHref = "/" }) {
               myLove
             </Link>
 
-            {/* 🔹 Menu Desktop */}
             <div className="hidden md:flex items-center gap-4">
               <nav className="flex items-center gap-4 text-sm font-medium">
                 {menuItems.map((item) => (
@@ -95,7 +93,6 @@ export default function Navbar({ mode = "default", backHref = "/" }) {
               </nav>
             </div>
 
-            {/* 🔹 User / Login */}
             {user ? (
               <div className="relative ml-4 hidden md:block">
                 <button
@@ -133,14 +130,12 @@ export default function Navbar({ mode = "default", backHref = "/" }) {
               </div>
             )}
 
-            {/* 🔹 Tombol Menu Mobile */}
             <button onClick={openSidebar} className="md:hidden p-2">
               <Menu size={22} />
             </button>
           </div>
         )}
 
-        {/* 🔹 MODE KEMBALI */}
         {mode === "kembali" && (
           <div className="flex items-center px-4 py-2 gap-3">
             <button
@@ -154,7 +149,6 @@ export default function Navbar({ mode = "default", backHref = "/" }) {
         )}
       </header>
 
-      {/* 🔹 SIDEBAR MOBILE (mode default) */}
       {mode === "default" && sidebarOpen && (
         <div
           className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
