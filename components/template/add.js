@@ -6,7 +6,7 @@ import Image from "next/image";
 import ImageUploadButton from "@/components/reusable/imageUpload";
 import { useParams } from "next/navigation";
 
-export default function AddSitePage() {
+export default function AddSite() {
   const { id } = useParams();
   const [template, setTemplate] = useState(null);
   const [user, setUser] = useState(null);
