@@ -1,40 +1,23 @@
+import prisma from "@/lib/prisma";
+
 export async function GET(req, { params }) {
+  try {
     const { subdomain } = await params;
 
-  const dummySites = [
-    {
-      subdomain: "syarif",
-      template: "template1",
-      content: {
-        title: "Toko Mawar",
-        description: "Menjual bunga segar setiap hari 🌹",
-        images: [
-          "https://picsum.photos/400/300?1",
-          "https://picsum.photos/400/300?2",
-        ],
-      },
-    },
-    {
-      subdomain: "testing",
-      template: "template2",
-      content: {
-        title: "Kopi Kenangan",
-        description: "Tempat terbaik untuk ngopi bareng teman ☕",
-        images: [
-          "https://picsum.photos/400/300?3",
-          "https://picsum.photos/400/300?4",
-          "https://picsum.photos/400/300?5",
-        ],
-      },
-    },
-  ];
+    const site = await prisma.site.findUnique({
+      where: { subdomain },
+      include: { user: true },
+    });
 
-  // 🔍 Cari site berdasarkan subdomain
-  const site = dummySites.find((s) => s.subdomain === subdomain);
+    if (!site) {
+      return Response.json(
+        { message: "No site found for this subdomain" },
+        { status: 404 }
+      );
+    }
 
-  if (!site) {
-    return Response.json({ error: "Website tidak ditemukan" }, { status: 404 });
+    return Response.json(site, { status: 200 });
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
   }
-
-  return Response.json(site);
 }

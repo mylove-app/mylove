@@ -1,212 +1,132 @@
 "use client";
 
-import { useState } from "react";
-import axios from "axios";
+import { useEffect, useState } from "react";
 import Image from "next/image";
-import ImageUploadButton from "@/components/reusable/imageUpload";
+import Link from "next/link";
 
-export default function AddTemplateForm() {
-  const empty = {
-    name: "",
-    texts: 0,
-    images: 0,
-    description: "",
-    image: [],
-    category: [""],
-    price: ["", "", ""],
-  };
+export default function MyTemplates() {
+  const [user, setUser] = useState(null);
+  const [templates, setTemplates] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [form, setForm] = useState(empty);
-  const [saving, setSaving] = useState(false);
+  // Ambil data user yang sedang login
+  useEffect(() => {
+    const fetchUserAndTemplates = async () => {
+      try {
+        // 1️⃣ Ambil data user login
+        const userRes = await fetch("/api/auth/getMe", { credentials: "include" });
+        if (!userRes.ok) throw new Error("Gagal mendapatkan user login");
+        const userData = await userRes.json();
+        console.log(userData);
+        setUser(userData);
 
-  function removeImage(url) {
-    setForm((s) => ({ ...s, image: s.image.filter((i) => i !== url) }));
-  }
+        // 2️⃣ Ambil template berdasarkan user.id
+        const templateRes = await fetch(`/api/site/byUser/${userData.user.id}`);
+        const data = await templateRes.json();
 
-  function updateCategory(index, value) {
-    const newCategories = [...form.category];
-    newCategories[index] = value;
-    setForm((s) => ({ ...s, category: newCategories }));
-  }
-
-  function addCategory() {
-    setForm((s) => ({ ...s, category: [...s.category, ""] }));
-  }
-
-  function removeCategory(index) {
-    if (form.category.length <= 1) return alert("Minimal 1 kategori wajib ada");
-    setForm((s) => ({
-      ...s,
-      category: s.category.filter((_, i) => i !== index),
-    }));
-  }
-
-  function updatePrice(index, value) {
-    const newPrices = [...form.price];
-    newPrices[index] = value;
-    setForm((s) => ({ ...s, price: newPrices }));
-  }
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    if (!form.name) return alert("Nama template wajib diisi");
-    if (form.category.some((c) => !c.trim()))
-      return alert("Semua kategori harus diisi (minimal 1)");
-    if (form.price.length !== 3 || form.price.some((p) => !p.trim()))
-      return alert("Harus ada 3 harga dan semuanya wajib diisi");
-
-    setSaving(true);
-    try {
-      await axios.post("/api/template", form);
-      alert("Template berhasil ditambahkan!");
-      setForm(empty);
-    } catch (err) {
-      alert("Gagal menambahkan template");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <form
-      onSubmit={handleSubmit}
-      className="p-6 max-w-md mx-auto space-y-4 border rounded"
-    >
-      <h2 className="text-lg font-semibold">Tambah Template</h2>
-
-      <Input
-        label="Nama Template"
-        value={form.name}
-        onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))}
-        required
-      />
-
-      <Input
-        label="Jumlah Teks"
-        type="number"
-        value={form.texts}
-        onChange={(e) =>
-          setForm((s) => ({ ...s, texts: parseInt(e.target.value) || 0 }))
+        if (templateRes.ok) {
+          setTemplates(data);
+        } else {
+          setTemplates([]);
         }
-      />
+      } catch (err) {
+        console.error(err);
+        setTemplates([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      <Input
-        label="Jumlah Gambar"
-        type="number"
-        value={form.images}
-        onChange={(e) =>
-          setForm((s) => ({ ...s, images: parseInt(e.target.value) || 0 }))
-        }
-      />
+    fetchUserAndTemplates();
+  }, []);
 
-      <div>
-        <label className="block text-sm text-slate-600 mb-1">Deskripsi</label>
-        <textarea
-          value={form.description}
-          onChange={(e) =>
-            setForm((s) => ({ ...s, description: e.target.value }))
-          }
-          className="w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none resize-none h-20"
-        />
+  if (loading)
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] text-gray-500 text-lg">
+        Memuat data template kamu...
       </div>
+    );
 
-      <div>
-        <label className="block text-sm text-slate-600 mb-1">Kategori</label>
-        {form.category.map((cat, i) => (
-          <div key={i} className="flex items-center gap-2 mb-2">
-            <input
-              type="text"
-              value={cat}
-              onChange={(e) => updateCategory(i, e.target.value)}
-              placeholder={`Kategori ${i + 1}`}
-              className="w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
-              required
-            />
-            <button
-              type="button"
-              onClick={() => removeCategory(i)}
-              className="bg-red-500 text-white rounded px-2 py-1 text-sm hover:bg-red-600"
-            >
-              ×
-            </button>
-          </div>
-        ))}
-        <button
-          type="button"
-          onClick={addCategory}
-          className="text-sm text-blue-600 hover:underline"
+  if (!user)
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] text-gray-500 text-lg">
+        Harap login terlebih dahulu
+      </div>
+    );
+
+  if (templates.length === 0)
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-gray-500 text-center">
+        <p className="text-lg mb-3">Kamu belum memiliki template.</p>
+        <Link
+          href="/add-template"
+          className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/80 transition"
         >
-          + Tambah Kategori
-        </button>
+          Tambah Template
+        </Link>
       </div>
+    );
 
-      <div>
-        <label className="block text-sm text-slate-600 mb-1">Harga (3 Tingkatan)</label>
-        {form.price.map((p, i) => (
-          <div key={i} className="mb-2">
-            <input
-              type="number"
-              value={p}
-              onChange={(e) => updatePrice(i, e.target.value)}
-              placeholder={`Harga ${i + 1}`}
-              className="w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
-              required
-            />
+  return (
+    <div className="max-w-5xl mx-auto p-6">
+      <h1 className="text-3xl font-semibold mb-6 text-gray-900">
+        Template Kamu
+      </h1>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        {templates.map((template) => (
+          <div
+            key={template.id}
+            className="border rounded-xl overflow-hidden hover:shadow-lg transition group"
+          >
+            <div className="relative w-full h-48 bg-gray-100">
+              {template.image?.[0] ? (
+                <Image
+                  src={template.image[0]}
+                  alt={template.name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  style={{ objectFit: "cover" }}
+                  className="group-hover:scale-105 transition-transform duration-300"
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-400">
+                  <Image
+                    src="/no-image.png"
+                    alt="No Image"
+                    width={100}
+                    height={100}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="p-4">
+              <h2 className="text-lg font-semibold text-gray-900 truncate">
+                {template.name}
+              </h2>
+
+              <div className="flex flex-wrap gap-1 mt-2 mb-3">
+                {template.category?.map((cat, i) => (
+                  <span
+                    key={i}
+                    className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs"
+                  >
+                    {cat}
+                  </span>
+                ))}
+              </div>
+
+              <Link
+                href={`/template/${template.id}`}
+                className="block w-full text-center bg-primary text-white py-2 rounded-md hover:bg-primary/80 transition"
+              >
+                Lihat Detail
+              </Link>
+            </div>
           </div>
         ))}
       </div>
-
-      <div>
-        <label className="block text-sm mb-1 text-slate-600">Upload Gambar</label>
-        <ImageUploadButton
-          endpoint="imageUploader"
-          maxFiles={5}
-          onUploadComplete={(urls) =>
-            setForm((s) => ({ ...s, image: [...s.image, ...urls].slice(0, 5) }))
-          }
-        />
-
-        <div className="flex flex-wrap gap-2 mt-3">
-          {form.image.map((url) => (
-            <div key={url} className="relative group">
-              <Image
-                src={url}
-                alt="Gambar template"
-                width={96}
-                height={96}
-                className="object-cover rounded border"
-              />
-              <button
-                type="button"
-                onClick={() => removeImage(url)}
-                className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition"
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <button
-        type="submit"
-        disabled={saving}
-        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-60"
-      >
-        {saving ? "Menyimpan..." : "Simpan Template"}
-      </button>
-    </form>
-  );
-}
-
-function Input({ label, className = "", ...props }) {
-  return (
-    <div className={className}>
-      <label className="block text-sm text-slate-600 mb-1">{label}</label>
-      <input
-        {...props}
-        className="w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
-      />
     </div>
   );
 }

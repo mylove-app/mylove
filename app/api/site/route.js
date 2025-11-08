@@ -13,10 +13,11 @@ export async function GET() {
   }
 }
 
+
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { name, subdomain, template, content, userId, expiredAt } = body;
+    const { name, subdomain, template, content, userId, expiredAt, status } = body;
 
     if (!name || !subdomain || !template || !userId) {
       return Response.json(
@@ -33,6 +34,7 @@ export async function POST(req) {
         content,
         userId,
         expiredAt: expiredAt ? new Date(expiredAt) : null,
+        status: typeof status === "boolean" ? status : false,
       },
     });
 
@@ -41,3 +43,5 @@ export async function POST(req) {
     return Response.json({ error: error.message }, { status: 500 });
   }
 }
+
+

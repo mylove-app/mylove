@@ -32,10 +32,13 @@ model Site {
   name       String
   subdomain  String   @unique
   template   String
-  content    Json?
-  userId     Int     
-  user       User     @relation(fields: [userId], references: [id])
+  content    Json
+  status     Boolean   @default(false)
+  userId     Int
   expiredAt  DateTime?
+  user       User     @relation(fields: [userId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model Template {
