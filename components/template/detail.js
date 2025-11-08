@@ -23,6 +23,7 @@ export default function TemplateDetail() {
         setLoading(false);
       }
     };
+
     if (id) fetchTemplate();
   }, [id]);
 
@@ -51,15 +52,19 @@ export default function TemplateDetail() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-6 pt-4 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+    <div className="mx-auto p-6 pt-4 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+      {/* BAGIAN GAMBAR */}
       <div>
-        <div className="relative w-full h-full md:h-[300px] bg-gray-100 rounded-xl overflow-hidden">
+        <div className="relative w-full h-[240px] sm:h-[300px] md:h-[350px] bg-gray-100 rounded-xl overflow-hidden">
           {images[activeImage] ? (
             <Image
               src={images[activeImage]}
               alt={`Gambar ${activeImage + 1}`}
               fill
-              className="object-cover transition-all duration-500 ease-in-out"
+              priority
+              sizes="(max-width: 768px) 100vw, 50vw"
+              style={{ objectFit: "cover" }}
+              className="transition-all duration-500 ease-in-out"
             />
           ) : (
             <div className="flex items-center justify-center h-full text-gray-400">
@@ -68,12 +73,14 @@ export default function TemplateDetail() {
                 alt="No Image"
                 width={200}
                 height={200}
-                className="w-full h-full object-cover"
+                className="object-contain"
               />
             </div>
           )}
         </div>
-        <div className="flex gap-3 mt-3 overflow-hidden">
+
+        {/* Thumbnail */}
+        <div className="flex gap-3 mt-3 overflow-x-auto">
           {images.map((img, i) => (
             <button
               key={i}
@@ -84,9 +91,16 @@ export default function TemplateDetail() {
                   : "border-transparent hover:border-gray-300"
               }`}
             >
-              <Image src={img} alt={`Thumb ${i + 1}`} fill className="object-cover" />
+              <Image
+                src={img}
+                alt={`Thumb ${i + 1}`}
+                fill
+                sizes="80px"
+                style={{ objectFit: "cover" }}
+              />
             </button>
           ))}
+
           {template.image?.length > 5 && (
             <div className="w-20 h-20 flex items-center justify-center rounded-xl bg-gray-100 text-gray-600 text-sm">
               +{template.image.length - 5} lagi
@@ -95,42 +109,56 @@ export default function TemplateDetail() {
         </div>
       </div>
 
+      {/* BAGIAN DETAIL */}
       <div className="flex flex-col justify-center h-full">
-        <div className="flex flex-col justify-center h-full">
-          <h1 className="text-4xl font-semibold mb-4 text-gray-900">{template.name}</h1>
-          <div className="flex flex-wrap gap-2 mb-3">
-            {template.category?.map((cat, i) => (
-              <span
-                key={i}
-                className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm"
+        <h1 className="text-4xl font-semibold mb-4 text-gray-900">
+          {template.name}
+        </h1>
+
+        <div className="flex flex-wrap gap-2 mb-3">
+          {template.category?.map((cat, i) => (
+            <span
+              key={i}
+              className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm"
+            >
+              {cat}
+            </span>
+          ))}
+        </div>
+
+        <p className="text-gray-600 mb-6">
+          {template.description || "Tidak ada deskripsi."}
+        </p>
+
+        {/* Durasi & Harga */}
+        <div className="mb-6">
+          <div className="flex gap-3 mb-4">
+            {[1, 7, 30].map((day) => (
+              <button
+                key={day}
+                onClick={() => setSelectedDuration(day)}
+                className={`px-4 py-2 rounded-lg border transition-all ${
+                  selectedDuration === day
+                    ? "bg-primary text-white border-primary"
+                    : "border-gray-300 text-gray-700 hover:border-gray-500"
+                }`}
               >
-                {cat}
-              </span>
+                {day} Hari
+              </button>
             ))}
           </div>
-          <p className="text-gray-600 mb-6">
-            {template.description || "Tidak ada deskripsi."}
-          </p>
-          <div className="mb-6">
-            <div className="flex gap-3 mb-4">
-              {[1, 7, 30].map((day) => (
-                <button
-                  key={day}
-                  onClick={() => setSelectedDuration(day)}
-                  className={`px-4 py-2 rounded-lg border transition-all ${
-                    selectedDuration === day
-                      ? "bg-primary text-white border-primary"
-                      : "border-gray-300 text-gray-700 hover:border-gray-500"
-                  }`}
-                >
-                  {day} Hari
-                </button>
-              ))}
-            </div>
-            <div className="text-3xl font-semibold text-gray-900">Rp.{getPriceByDuration()}</div>
+
+          <div className="text-3xl font-semibold text-gray-900">
+            Rp.{getPriceByDuration()}
           </div>
+        </div>
+
+        <div className="flex gap-8">
           <button className="w-full md:w-1/2 bg-primary text-white py-3 rounded-xl font-medium hover:bg-primary/80 transition">
             Gunakan Template
+          </button>
+          <button className="w-full md:w-1/2 bg-primary text-white py-3 rounded-xl font-medium hover:bg-primary/80 transition">
+            Lihat Preview
           </button>
         </div>
       </div>
