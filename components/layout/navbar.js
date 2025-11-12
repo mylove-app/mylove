@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Home, Package, Tag, Menu, X, ArrowLeft } from "lucide-react";
 import variable from "@/lib/variable";
+import Button from "../reusable/button";
 
 export default function Navbar({ mode = "default", backHref = "/" }) {
   const pathname = usePathname();
@@ -110,23 +111,18 @@ export default function Navbar({ mode = "default", backHref = "/" }) {
                 </button>
                 {dropdownOpen && (
                   <div className="absolute right-0 mt-2 w-36 bg-white border border-slate-200 rounded shadow-md z-50">
-                    <button
+                    <Button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded"
-                    >
-                      Logout
-                    </button>
+                      py="py-1"
+                      px="px-6"
+                      label="Logout"
+                    />
                   </div>
                 )}
               </div>
             ) : (
               <div className="ml-4 hidden md:block">
-                <a
-                  href="/auth"
-                  className="px-4 py-2 text-sm font-semibold bg-primary text-background rounded hover:bg-primary/90"
-                >
-                  Login
-                </a>
+                <Button href="/auth" py="py-1" px="px-6" label="Login" />
               </div>
             )}
 

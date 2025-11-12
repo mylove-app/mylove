@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import Button from "@/components/reusable/button";
 
 export default function TemplateCard({ template }) {
   const router = useRouter();
@@ -45,14 +46,16 @@ export default function TemplateCard({ template }) {
         </div>
 
         <div className="w-full mt-3 flex justify-end">
-          <button
+          <Button
             onClick={() =>
               router.push(`/template/${encodeURIComponent(template.id)}`)
             }
-            className="text-xs text-background bg-primary py-1.5 px-3 rounded-lg hover:bg-background hover:text-primary border border-primary transition-all"
-          >
-            Lihat Detail
-          </button>
+            label="lihat detail"
+            fontWeight="semibold"
+            py="py-2"
+            px="px-3"
+            textSize="text-xs"
+          />
         </div>
       </div>
     </div>
