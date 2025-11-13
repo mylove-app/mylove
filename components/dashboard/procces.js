@@ -33,7 +33,8 @@ export default function ProcessPage() {
       <div className="text-center">
         <Title>Cara Kerja</Title>
 
-        <div className="relative flex flex-col md:flex-row items-center justify-between gap-12 md:gap-8">
+<div className="grid grid-cols-2 md:flex md:flex-row items-center justify-between gap-8">
+
           {steps.map((step, i) => (
             <motion.div
               key={i}
