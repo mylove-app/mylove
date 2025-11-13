@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import TemplateCard from "@/components/dashboard/template/card";
+import TemplateCard from "@/components/template/card";
 import { Search } from "lucide-react";
 
 export default function KategoriDetail() {

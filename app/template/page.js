@@ -1,11 +1,11 @@
 import Navbar from "@/components/layout/navbar";
-import MyTemplates from "@/components/template/myTemplate";
+import Template from "@/components/template/template";
 
-export default function Template() {
+export default function TemplatePage() {
   return (
     <div>
-      <Navbar mode="kembali" />
-      <MyTemplates />;
+      <Navbar/>
+      <Template />;
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown, Search } from "lucide-react";
-import TemplateCard from "./card";
+import TemplateCard from "@/components/template/card";
 import { useState, useEffect } from "react";
 
 function SkeletonCard() {

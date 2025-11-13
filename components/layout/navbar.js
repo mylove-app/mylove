@@ -110,7 +110,7 @@ export default function Navbar({ mode = "default", backHref = "/" }) {
                   </span>
                 </button>
                 {dropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-36 bg-white border border-slate-200 rounded shadow-md z-50">
+                  <div className="absolute right-0 mt-2 z-50">
                     <Button
                       onClick={handleLogout}
                       py="py-1"

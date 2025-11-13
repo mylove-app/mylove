@@ -11,18 +11,18 @@ export default function TemplateCard({ template }) {
     text?.length > limit ? text.slice(0, limit) + "..." : text;
 
   return (
-    <div className="relative overflow-hidden transition-all duration-200 hover:-translate-y-1 flex flex-col border border-gray-200 rounded-[8px] p-3">
+    <div className="relative overflow-hidden transition-all duration-200 hover:-translate-y-1 flex flex-col border border-gray-200 rounded-[8px]">
       <div className="aspect-[4/3] w-full overflow-hidden mb-2">
         <Image
           src={template.image?.[0] || "/no-image.png"}
           width={400}
           height={300}
           alt={template.name}
-          className="w-full h-full object-cover rounded-[5px]"
+          className="w-full h-full object-cover"
         />
       </div>
 
-      <div className="w-full flex-1 flex flex-col justify-between">
+      <div className="w-full flex-1 flex flex-col justify-between p-3">
         <div>
           <h4 className="font-semibold text-sm line-clamp-2">
             {truncate(template.name, 35)}
