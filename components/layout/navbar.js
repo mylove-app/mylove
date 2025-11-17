@@ -51,7 +51,7 @@ export default function Navbar({ mode = "default", backHref = "/" }) {
 
   const menuItems = [
     { name: "Beranda", href: "/#beranda", icon: <Home size={18} /> },
-    { name: "Template", href: "/#template", icon: <Package size={18} /> },
+    { name: "Template", href: "/template", icon: <Package size={18} /> },
     { name: "Kategori", href: "/kategori", icon: <Tag size={18} /> },
   ];
 

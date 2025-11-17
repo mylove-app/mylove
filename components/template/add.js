@@ -1,228 +1,171 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import Image from "next/image";
 import ImageUploadButton from "@/components/reusable/imageUpload";
+import { extractFields } from "@/lib/extractField";
 import { useParams } from "next/navigation";
 
-export default function AddSite() {
-  const { id } = useParams();
+export default function Editor() {
+  const { id: templateId } = useParams();
   const [template, setTemplate] = useState(null);
   const [user, setUser] = useState(null);
+
+  const [content, setContent] = useState({}); // text atau File
   const [form, setForm] = useState({
     name: "",
     subdomain: "",
-    content: { texts: [], images: [] },
     expiredAt: "",
     status: false,
   });
-  const [saving, setSaving] = useState(false);
 
-  // Ambil data user login
+  // Ambil user
   useEffect(() => {
-    const fetchUser = async () => {
+    async function fetchUser() {
       try {
         const res = await axios.get("/api/auth/getMe", { withCredentials: true });
-        console.log(res.data.user);
         setUser(res.data.user);
-      } catch (err) {
-        console.error("Gagal memuat user:", err);
+      } catch {
         alert("Silakan login terlebih dahulu!");
       }
-    };
+    }
     fetchUser();
   }, []);
 
-  // Ambil data template berdasarkan ID
+  // Ambil template
   useEffect(() => {
-    const fetchTemplate = async () => {
+    async function loadTemplate() {
       try {
-        const res = await axios.get(`/api/template/${id}`);
-        setTemplate(res.data);
-        setForm((f) => ({
-          ...f,
-          content: {
-            texts: Array(res.data.texts).fill(""),
-            images: [],
-          },
-        }));
+        const res = await fetch(`/api/template/${templateId}`);
+        const data = await res.json();
+        setTemplate(data);
+
+        const fields = extractFields(data);
+        const initialContent = {};
+        fields.forEach((key) => (initialContent[key] = ""));
+        setContent(initialContent);
       } catch (err) {
         console.error(err);
       }
-    };
-    fetchTemplate();
-  }, [id]);
+    }
+    loadTemplate();
+  }, [templateId]);
+
+  // Preview live
+  const previewHTML = useMemo(() => {
+    if (!template) return "";
+    let html = `
+      <style>${template.css || ""}</style>
+      ${template.html || ""}
+      <script>${template.js || ""}</script>
+    `;
+    Object.keys(content).forEach((key) => {
+      let value = content[key];
+      if (value instanceof File) value = URL.createObjectURL(value);
+      html = html.replaceAll(`{{${key}}}`, value || "");
+    });
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8" />
+          <style>
+            @media (max-width: 420px) {
+              ::-webkit-scrollbar { width: 5px; }
+              ::-webkit-scrollbar-thumb { background: #555; border-radius: 10px; }
+              ::-webkit-scrollbar-track { background: #181818; }
+            }
+            ${template.css || ""}
+          </style>
+        </head>
+        <body>${html}</body>
+      </html>
+    `;
+  }, [template, content]);
 
   if (!template) return <p className="text-center mt-10">Memuat template...</p>;
 
-  // Fungsi update teks
-  const updateText = (index, value) => {
-    const newTexts = [...form.content.texts];
-    newTexts[index] = value;
-    setForm((f) => ({ ...f, content: { ...f.content, texts: newTexts } }));
-  };
+  const updateText = (key, value) => setContent(prev => ({ ...prev, [key]: value }));
+  const updateImage = (key, file) => setContent(prev => ({ ...prev, [key]: file }));
 
-  // Fungsi hapus gambar
-  const removeImage = (url) => {
-    setForm((f) => ({
-      ...f,
-      content: {
-        ...f.content,
-        images: f.content.images.filter((i) => i !== url),
-      },
-    }));
-  };
-
-  // Submit
+  // Submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.subdomain)
-      return alert("Nama dan subdomain wajib diisi!");
-    if (!user?.id) return alert("User belum terdeteksi. Harap login kembali!");
-    if (form.content.images.length < template.images)
-      return alert(`Harus upload ${template.images} gambar sesuai template!`);
 
-    setSaving(true);
+    if (!form.name || !form.subdomain) return alert("Nama & subdomain wajib diisi!");
+    if (!user?.id) return alert("User belum terdeteksi!");
+
+    const formData = new FormData();
+    Object.keys(content).forEach(key => {
+      if (content[key] instanceof File) formData.append(key, content[key]);
+    });
+
+    // Upload ke /api/uploadImage
+    let uploadedUrls = {};
+    if (formData.has("image1") || formData.has("image2") || formData.has("image3")) {
+      const res = await fetch("/api/uploadImage", { method: "POST", body: formData });
+      uploadedUrls = await res.json();
+    }
+
+    const finalContent = { ...content };
+    Object.keys(uploadedUrls).forEach(key => finalContent[key] = uploadedUrls[key]);
+
     try {
-      const payload = {
-        name: form.name,
-        subdomain: form.subdomain,
-        template: template.name,
-        content: form.content,
-        userId: user.id,
-        expiredAt: form.expiredAt || null,
-        status: form.status,
-      };
-
-      await axios.post("/api/site", payload, { withCredentials: true });
-      alert("Site berhasil dibuat!");
-
-      // Reset form
-      setForm({
-        name: "",
-        subdomain: "",
-        content: { texts: Array(template.texts).fill(""), images: [] },
-        expiredAt: "",
-        status: false,
-      });
+      await axios.post("/api/site", { ...form, content: finalContent, userId: user.id, templateId }, { withCredentials: true });
+      alert("Website berhasil dibuat!");
+      setForm({ name: "", subdomain: "", expiredAt: "", status: false });
+      setContent({});
     } catch (err) {
-      console.error(err);
-      alert("Gagal menambahkan site.");
-    } finally {
-      setSaving(false);
+      console.error("Axios error:", err.response?.data || err.message);
+      alert("Gagal membuat site, cek console.");
     }
   };
 
+  const fields = extractFields(template);
+
   return (
-    <div className="max-w-2xl mx-auto p-6 border rounded-md space-y-6">
-      <h2 className="text-xl font-semibold">
-        Buat Site dari Template: {template.name}
-      </h2>
+    <div className="h-[88vh] w-full flex overflow-hidden relative">
+      {/* Sidebar */}
+      <div className="w-[350px] h-[85vh] bg-white p-4 overflow-y-auto absolute left-0 top-0 z-20">
+        <h2 className="text-xl font-semibold">Buat Website: {template.name}</h2>
+        {user && <p className="text-sm text-gray-600 mb-4">Login sebagai: <strong>{user.name || user.email}</strong></p>}
 
-      {user && (
-        <p className="text-sm text-gray-600">
-          Login sebagai: <span className="font-medium">{user.name || user.email}</span>
-        </p>
-      )}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <Input label="Nama Website" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
+          <Input label="Subdomain" value={form.subdomain} placeholder="contoh: tokoku" onChange={e => setForm({ ...form, subdomain: e.target.value })} required />
+          <Input label="Tanggal Expired (Opsional)" type="date" value={form.expiredAt} onChange={e => setForm({ ...form, expiredAt: e.target.value })} />
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          label="Nama Site"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-          required
-        />
-
-        <Input
-          label="Subdomain"
-          value={form.subdomain}
-          onChange={(e) => setForm({ ...form, subdomain: e.target.value })}
-          placeholder="contoh: mawar"
-          required
-        />
-
-        <Input
-          label="Tanggal Kadaluarsa (Opsional)"
-          type="date"
-          value={form.expiredAt}
-          onChange={(e) => setForm({ ...form, expiredAt: e.target.value })}
-        />
-
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            Isi Teks ({template.texts})
-          </label>
-          {form.content.texts.map((t, i) => (
-            <textarea
-              key={i}
-              value={t}
-              onChange={(e) => updateText(i, e.target.value)}
-              placeholder={`Teks ${i + 1}`}
-              className="w-full border rounded-md px-3 py-2 mb-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none h-16"
-              required
-            />
+          <h3 className="font-medium text-lg">Isi Konten Template</h3>
+          {fields.map((key) => (
+            <div key={key} className="mb-4">
+              {key.toLowerCase().includes("image") ? (
+                <div>
+                  <label className="block text-sm mb-1 capitalize">{key}</label>
+                  <ImageUploadButton onFileSelect={(file) => updateImage(key, file)} />
+                  {content[key] && !(content[key] instanceof File) && (
+                    <Image src={content[key]} alt="preview" width={120} height={120} className="rounded border mt-2" />
+                  )}
+                </div>
+              ) : (
+                <Input label={key} value={content[key] || ""} onChange={e => updateText(key, e.target.value)} />
+              )}
+            </div>
           ))}
-        </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            Upload Gambar ({form.content.images.length}/{template.images})
-          </label>
-
-          <ImageUploadButton
-            endpoint="imageUploader"
-            maxFiles={template.images - form.content.images.length}
-            onUploadComplete={(urls) =>
-              setForm((f) => ({
-                ...f,
-                content: {
-                  ...f.content,
-                  images: [...f.content.images, ...urls].slice(0, template.images),
-                },
-              }))
-            }
-          />
-
-          <div className="flex flex-wrap gap-2 mt-3">
-            {form.content.images.map((url) => (
-              <div key={url} className="relative group">
-                <Image
-                  src={url}
-                  alt="Gambar"
-                  width={96}
-                  height={96}
-                  className="object-cover rounded border"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeImage(url)}
-                  className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
+          <div className="flex items-center gap-2">
+            <label>Status Aktif:</label>
+            <input type="checkbox" checked={form.status} onChange={e => setForm({ ...form, status: e.target.checked })} />
           </div>
-        </div>
 
-        <div className="flex items-center gap-2">
-          <label className="text-sm">Status Aktif:</label>
-          <input
-            type="checkbox"
-            checked={form.status}
-            onChange={(e) => setForm({ ...form, status: e.target.checked })}
-          />
-        </div>
+          <button className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/80 w-full">Publish Website</button>
+        </form>
+      </div>
 
-        <button
-          type="submit"
-          disabled={saving}
-          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-60"
-        >
-          {saving ? "Menyimpan..." : "Simpan Site"}
-        </button>
-      </form>
+      {/* Preview */}
+      <div className="flex-1 h-full ml-[350px] bg-background">
+        <iframe srcDoc={previewHTML} className="w-full h-full border-none" style={{ pointerEvents: "auto" }} />
+      </div>
     </div>
   );
 }
@@ -231,10 +174,7 @@ function Input({ label, className = "", ...props }) {
   return (
     <div className={className}>
       <label className="block text-sm font-medium mb-1">{label}</label>
-      <input
-        {...props}
-        className="w-full border rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-      />
+      <input {...props} className="w-full border rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
     </div>
   );
 }

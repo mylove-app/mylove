@@ -18,22 +18,34 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
-    const { name, texts, images, description, image, category, price } = await req.json();
+    const body = await req.json();
+
+    const {
+      name,
+      description,
+      category,
+      price,
+      image,
+      html,
+      css,
+      js
+    } = body;
 
     const template = await prisma.template.create({
       data: {
         name,
-        texts,
-        images,
         description,
-        image,
         category,
         price,
-      },
+        image,
+        html,
+        css,
+        js
+      }
     });
 
-    return NextResponse.json(template, { status: 201 });
-  } catch (err) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return Response.json(template);
+  } catch (e) {
+    return Response.json({ error: e.message }, { status: 500 });
   }
 }

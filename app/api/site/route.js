@@ -13,15 +13,32 @@ export async function GET() {
   }
 }
 
-
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { name, subdomain, template, content, userId, expiredAt, status } = body;
+    const { name, subdomain, templateId, content, userId, expiredAt, status } = body;
 
-    if (!name || !subdomain || !template || !userId) {
+    if (!name) {
       return Response.json(
-        { error: "Missing required fields" },
+        { error: "Missing required name" },
+        { status: 400 }
+      );
+    }
+    if (!subdomain) {
+      return Response.json(
+        { error: "Missing required subdomain" },
+        { status: 400 }
+      );
+    }
+    if (!templateId) {
+      return Response.json(
+        { error: "Missing required templateId" },
+        { status: 400 }
+      );
+    }
+    if (!userId) {
+      return Response.json(
+        { error: "Missing userId" },
         { status: 400 }
       );
     }
@@ -30,9 +47,9 @@ export async function POST(req) {
       data: {
         name,
         subdomain,
-        template,
+        templateId: Number(templateId),
         content,
-        userId,
+        userId: Number(userId),
         expiredAt: expiredAt ? new Date(expiredAt) : null,
         status: typeof status === "boolean" ? status : false,
       },
@@ -43,5 +60,3 @@ export async function POST(req) {
     return Response.json({ error: error.message }, { status: 500 });
   }
 }
-
-

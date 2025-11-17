@@ -1,22 +1,33 @@
-import { templates } from "@/components/template";
-import NotFound from "@/app/not-found";
+import prisma from "@/lib/prisma";
 
 export default async function SitePage({ params }) {
-  const { subdomain } = await params;
-  const API_URL = process.env.NEXT_PUBLIC_BASE_API || "http://localhost:3000";
-  const res = await fetch(`${API_URL}/api/site/${subdomain}`, {
-    cache: "no-store",
+  const { subdomain } =await params;
+
+  const site = await prisma.site.findUnique({
+    where: { subdomain },
+    include: { template: true }
+  });
+  console.log("site:",subdomain);
+
+  if (!site) return <div>Website tidak ditemukan</div>;
+
+  // ambil template parts
+  let html = site.template.html || "";
+  const css = site.template.css || "";
+  const js = site.template.js || "";
+
+  // replace {{variable}} di dalam HTML
+  Object.entries(site.content).forEach(([key, value]) => {
+    html = html.replace(new RegExp(`{{${key}}}`, "g"), value);
   });
 
-  if (!res.ok) {
-    return <NotFound />;
-  }
+  return (
+    <>
+      <style>{css}</style>
 
-  const site = await res.json();
-  const TemplateComponent = templates[site.template];
+      <div dangerouslySetInnerHTML={{ __html: html }} />
 
-  if (!TemplateComponent)
-    return <h1 className="text-center mt-10">Template tidak ditemukan</h1>;
-
-  return <TemplateComponent content={site.content} />;
+      <script dangerouslySetInnerHTML={{ __html: js }} />
+    </>
+  );
 }
