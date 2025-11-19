@@ -48,7 +48,7 @@ export async function POST(request) {
     const snap = new midtransClient.Snap({
       isProduction: false,
       serverKey: process.env.MIDTRANS_SERVER_KEY,
-      clientKey: process.env.MIDTRANS_CLIENT_KEY
+      clientKey: process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY
     });
 
     const parameter = {
