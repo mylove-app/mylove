@@ -6,7 +6,7 @@ export async function GET(_, { params }) {
 
     const sites = await prisma.site.findMany({
       where: { userId: Number(userId) },
-      include: { user: true }, // relasi ke tabel User
+      include: { user: true },
       orderBy: { id: "desc" },
     });
 

@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import TemplateCard from "@/components/template/card";
 import Title from "@/components/reusable/title";
+import NotFound from "@/app/not-found";
 
 export default function TemplateDetail() {
   const { id } = useParams();
@@ -19,6 +20,10 @@ export default function TemplateDetail() {
     const fetchTemplate = async () => {
       try {
         const res = await fetch(`/api/template/${id}`);
+        if (!res.ok) {
+          setTemplate(null);
+          return;
+        }
         const data = await res.json();
         setTemplate(data);
 
@@ -45,17 +50,66 @@ export default function TemplateDetail() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh] text-gray-500 text-lg">
-        Memuat...
+      <div className="mx-auto p-6 pt-4 max-w-7xl animate-pulse">
+        {/* Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          {/* Skeleton Gambar */}
+          <div className="space-y-4">
+            <div className="w-full h-[240px] sm:h-[300px] md:h-[350px] bg-gray-200 rounded-xl"></div>
+            <div className="flex gap-3 overflow-x-auto">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="w-20 h-20 bg-gray-200 rounded-xl flex-shrink-0"
+                ></div>
+              ))}
+            </div>
+          </div>
+
+          {/* Skeleton Detail */}
+          <div className="flex flex-col justify-between h-full min-h-[350px]">
+            <div className="space-y-4">
+              {/* Nama Template */}
+              <div className="w-3/4 h-8 bg-gray-200 rounded"></div>
+
+              {/* Kategori */}
+              <div className="flex gap-2">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="w-16 h-6 bg-gray-200 rounded-full"
+                  ></div>
+                ))}
+              </div>
+
+              {/* Deskripsi */}
+              <div className="space-y-2">
+                <div className="w-full h-4 bg-gray-200 rounded"></div>
+                <div className="w-5/6 h-4 bg-gray-200 rounded"></div>
+                <div className="w-2/3 h-4 bg-gray-200 rounded"></div>
+              </div>
+            </div>
+
+            {/* Tombol Aksi */}
+            <div className="flex gap-8 mt-auto">
+              <div className="w-full md:w-1/2 h-10 bg-gray-200 rounded-xl"></div>
+              <div className="w-full md:w-1/2 h-10 bg-gray-200 rounded-xl"></div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
-  if (!template) {
+  if (!template || Object.keys(template).length === 0) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh] text-gray-500 text-lg">
-        Template tidak ditemukan
-      </div>
+      <NotFound
+        title="Template Tidak Ditemukan!"
+        code="404"
+        message="Oops! Template yang anda cari tidak ditemukan."
+        buttonLabel="Kembali"
+        buttonHref="/"
+      />
     );
   }
 
