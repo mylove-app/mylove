@@ -55,11 +55,56 @@ export default function Editor() {
 
   useEffect(() => {
   const script = document.createElement("script");
-  script.src = "https://app.sandbox.midtrans.com/snap/snap.js";
+  script.src = "https://app.sandbox.midtrans.com/snap/snap.js"; // sandbox
   script.setAttribute("data-client-key", process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY);
+  script.async = true;
   document.body.appendChild(script);
+
+  script.onload = () => console.log("Snap loaded");
+  script.onerror = () => console.error("Snap failed to load");
 }, []);
 
+ 
+  useEffect(() => {
+      function handleMessage(e) {
+        if (e.data?.action !== "OPEN_SNAP" || !e.data?.token) return;
+
+        const runPay = () => {
+          if (typeof window.snap?.pay === "function") {
+            window.snap.pay(e.data.token, {
+              onSuccess: function () {
+                alert("Pembayaran berhasil!");
+              },
+              onPending: function () {
+                alert("Menunggu pembayaran...");
+              },
+              onError: function () {
+                alert("Pembayaran gagal");
+              },
+            });
+            return true;
+          }
+          return false;
+        };
+
+        if (!runPay()) {
+          // retry a few times while the snap script initializes
+          let attempts = 0;
+          const iv = setInterval(() => {
+            attempts++;
+            if (runPay() || attempts > 10) {
+              clearInterval(iv);
+              if (attempts > 10 && typeof window.snap?.pay !== "function") {
+                alert("Gagal memuat Midtrans Snap. Silakan coba lagi nanti.");
+              }
+            }
+          }, 300);
+        }
+      }
+
+      window.addEventListener("message", handleMessage);
+      return () => window.removeEventListener("message", handleMessage);
+    }, []);
 
   const calculateExpiration = (index) => {
     const now = new Date();
@@ -110,89 +155,104 @@ export default function Editor() {
   const updateImage = (key, file) =>
     setContent((prev) => ({ ...prev, [key]: file }));
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  if (!form.name || !form.subdomain)
-    return alert("Nama dan subdomain wajib diisi");
+    if (!form.name || !form.subdomain)
+      return alert("Nama dan subdomain wajib diisi");
 
-  if (priceIndex === null) return alert("Pilih durasi paket terlebih dahulu");
+    if (priceIndex === null) return alert("Pilih durasi paket terlebih dahulu");
+    if (!user?.id) return alert("User tidak ditemukan");
 
-  if (!user?.id) return alert("User tidak ditemukan");
-  setLoading(true);
+    setLoading(true);
 
-  const autoExpiredAt = calculateExpiration(priceIndex);
+    const autoExpiredAt = calculateExpiration(priceIndex);
 
-  const formData = new FormData();
-  Object.keys(content).forEach((key) => {
-    if (content[key] instanceof File) {
-      formData.append(key, content[key]);
+    const formData = new FormData();
+    Object.keys(content).forEach((key) => {
+      if (content[key] instanceof File) {
+        formData.append(key, content[key]);
+      }
+    });
+
+    let uploadedUrls = {};
+    if ([...formData.keys()].length > 0) {
+      const res = await fetch("/api/uploadImage", {
+        method: "POST",
+        body: formData,
+      });
+      uploadedUrls = await res.json();
     }
-  });
 
-  let uploadedUrls = {};
-  if ([...formData.keys()].length > 0) {
-    const res = await fetch("/api/uploadImage", {
-      method: "POST",
-      body: formData,
-    });
-    uploadedUrls = await res.json();
-  }
-
-  const finalContent = { ...content };
-  Object.keys(uploadedUrls).forEach((key) => {
-    finalContent[key] = uploadedUrls[key];
-  });
-
-  try {
-    // 1. SIMPAN WEBSITE
-    const siteRes = await axios.post(
-      "/api/site",
-      {
-        ...form,
-        content: finalContent,
-        status: false,
-        expiredAt: autoExpiredAt,
-        userId: user.id,
-        templateId,
-        priceIndex,
-      },
-      { withCredentials: true }
-    );
-
-    const site = siteRes.data;
-
-    // 2. PANGGIL API MIDTRANS
-    const payRes = await axios.post("/api/paid", {
-  id: site.id,
-  template: template.id,
-  price: priceIndex,
-});
-
-
-    const { token } = payRes.data;
-
-    // 3. POPUP SNAP
-    window.snap.pay(token, {
-      onSuccess: function () {
-        alert("Pembayaran berhasil!");
-      },
-      onPending: function () {
-        alert("Menunggu pembayaran...");
-      },
-      onError: function () {
-        alert("Pembayaran gagal");
-      },
+    const finalContent = { ...content };
+    Object.keys(uploadedUrls).forEach((key) => {
+      finalContent[key] = uploadedUrls[key];
     });
 
-  } catch (err) {
-    console.error(err.response?.data || err.message);
-    alert("Gagal membuat website");
-  }
+    try {
+      // 1. SIMPAN WEBSITE
+      const siteRes = await axios.post(
+        "/api/site",
+        {
+          ...form,
+          content: finalContent,
+          status: false,
+          expiredAt: autoExpiredAt,
+          userId: user.id,
+          templateId,
+          priceIndex,
+        },
+        { withCredentials: true }
+      );
 
-  setLoading(false);
-};
+      const site = siteRes.data;
 
+      // 2. PANGGIL MIDTRANS
+      const payRes = await axios.post("/api/site/paid", {
+        id: site.id,
+        template: template.name,
+        price: Number(template.price[priceIndex]),
+        customer: {
+          name: user?.name || user?.username || "",
+          email: user?.email || "",
+        },
+      });
+
+      console.log("payRes.data:", payRes.data);
+
+      const { token } = payRes.data;
+
+      if (!token) {
+        alert("Gagal mendapatkan token pembayaran");
+        return;
+      }
+      // If the Snap client is already available, call it directly.
+      if (typeof window.snap?.pay === "function") {
+        window.snap.pay(token, {
+          onSuccess: function (result) {
+            console.log("snap onSuccess:", result);
+            alert("Pembayaran berhasil!");
+          },
+          onPending: function (result) {
+            console.log("snap onPending:", result);
+            alert("Menunggu pembayaran...");
+          },
+          onError: function (result) {
+            console.error("snap onError:", result);
+            alert("Pembayaran gagal: " + (result?.message || "Unknown error"));
+          },
+        });
+      } else {
+        // fallback to postMessage which our message listener will handle and retry
+        window.postMessage({ action: "OPEN_SNAP", token }, "*");
+      }
+    } catch (err) {
+      console.error(err.response?.data || err.message);
+      alert("Gagal membuat website");
+    }
+
+    setLoading(false);
+  };
 
   const fields = extractFields(template);
 

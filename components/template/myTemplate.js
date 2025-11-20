@@ -17,7 +17,6 @@ export default function MyTemplates() {
         const userRes = await fetch("/api/auth/getMe", { credentials: "include" });
         if (!userRes.ok) throw new Error("Gagal mendapatkan user login");
         const userData = await userRes.json();
-        console.log(userData);
         setUser(userData);
 
         // 2️⃣ Ambil template berdasarkan user.id

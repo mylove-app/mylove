@@ -7,7 +7,6 @@ export default async function SitePage({ params }) {
     where: { subdomain },
     include: { template: true }
   });
-  console.log("site:",subdomain);
 
   if (!site) return <div>Website tidak ditemukan</div>;
 
