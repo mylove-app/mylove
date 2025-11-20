@@ -16,7 +16,7 @@ export async function GET() {
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { name, subdomain, templateId, content, userId, expiredAt, status } = body;
+    const { name, subdomain, templateId, content, userId , priceIndex} = body;
 
     if (!name) {
       return Response.json(
@@ -50,8 +50,9 @@ export async function POST(req) {
         templateId: Number(templateId),
         content,
         userId: Number(userId),
-        expiredAt: expiredAt ? new Date(expiredAt) : null,
-        status: typeof status === "boolean" ? status : false,
+        expiredAt: null,
+        status: false,
+        priceIndex
       },
     });
 

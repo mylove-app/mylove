@@ -26,6 +26,7 @@ model Site {
   template   Template  @relation(fields: [templateId], references: [id])
   content    Json
   status     Boolean   @default(false)
+  priceIndex Int
   userId     Int
   user       User      @relation(fields: [userId], references: [id])
   expiredAt  DateTime?

@@ -63,86 +63,67 @@ export default function Editor() {
     if (clientKey) script.setAttribute("data-client-key", clientKey);
     script.async = true;
 
-    console.log("[midtrans-client] injecting snap script", { src: script.src, clientKeyPresent: !!clientKey, isProd });
-    if (clientKey) console.log("[midtrans-client] clientKey (truncated):", clientKey.slice(0, 6) + "..." + clientKey.slice(-4));
-
     document.body.appendChild(script);
 
-    script.onload = () => {
-      console.log("[midtrans-client] Midtrans Snap script loaded (prod=" + isProd + ")");
-      try {
-        console.log("[midtrans-client] window.snap present:", !!window.snap);
-        if (window.snap) {
-          console.log("[midtrans-client] window.snap keys:", Object.keys(window.snap));
-        }
-      } catch (e) {
-        console.error("[midtrans-client] error checking window.snap:", e);
-      }
-    };
+    script.onload = () => {};
 
-    script.onerror = (e) => console.error("[midtrans-client] Midtrans Snap failed to load (prod=" + isProd + ")", e);
+    script.onerror = () => {};
 
     // if script is slow, poll for window.snap and log attempts
     let pollCount = 0;
     const poll = setInterval(() => {
       pollCount++;
       const snapPresent = typeof window.snap?.pay === "function";
-      console.log(`[midtrans-client] poll #${pollCount} window.snap.pay present:`, snapPresent);
       if (snapPresent || pollCount > 10) clearInterval(poll);
     }, 300);
 
     return () => {
       clearInterval(poll);
-      try { document.body.removeChild(script); } catch {}
+      try {
+        document.body.removeChild(script);
+      } catch {}
     };
   }, []);
 
- 
   useEffect(() => {
-      function handleMessage(e) {
-        console.log("[midtrans-client] window message received:", { origin: e.origin, data: e.data });
-        if (e.data?.action !== "OPEN_SNAP" || !e.data?.token) return;
+    function handleMessage(e) {
+      if (e.data?.action !== "OPEN_SNAP" || !e.data?.token) return;
 
-        const runPay = () => {
-          console.log("[midtrans-client] attempting window.snap.pay - exists?", typeof window.snap?.pay === "function");
-          if (typeof window.snap?.pay === "function") {
-            window.snap.pay(e.data.token, {
-              onSuccess: function (res) {
-                console.log("[midtrans-client] snap.onSuccess:", res);
-                alert("Pembayaran berhasil!");
-              },
-              onPending: function (res) {
-                console.log("[midtrans-client] snap.onPending:", res);
-                alert("Menunggu pembayaran...");
-              },
-              onError: function (res) {
-                console.error("[midtrans-client] snap.onError:", res);
-                alert("Pembayaran gagal: " + (res?.message || "Unknown error"));
-              },
-            });
-            return true;
-          }
-          return false;
-        };
-
-        if (!runPay()) {
-          // retry a few times while the snap script initializes
-          let attempts = 0;
-          const iv = setInterval(() => {
-            attempts++;
-            if (runPay() || attempts > 10) {
-              clearInterval(iv);
-              if (attempts > 10 && typeof window.snap?.pay !== "function") {
-                alert("Gagal memuat Midtrans Snap. Silakan coba lagi nanti.");
-              }
-            }
-          }, 300);
+      const runPay = () => {
+        if (typeof window.snap?.pay === "function") {
+          window.snap.pay(e.data.token, {
+            onSuccess: function (res) {
+              alert("Pembayaran berhasil!");
+            },
+            onPending: function (res) {
+              alert("Menunggu pembayaran...");
+            },
+            onError: function (res) {
+              alert("Pembayaran gagal: " + (res?.message || "Unknown error"));
+            },
+          });
+          return true;
         }
-      }
+        return false;
+      };
 
-      window.addEventListener("message", handleMessage);
-      return () => window.removeEventListener("message", handleMessage);
-    }, []);
+      if (!runPay()) {
+        let attempts = 0;
+        const iv = setInterval(() => {
+          attempts++;
+          if (runPay() || attempts > 10) {
+            clearInterval(iv);
+            if (attempts > 10 && typeof window.snap?.pay !== "function") {
+              alert("Gagal memuat Midtrans Snap. Silakan coba lagi nanti.");
+            }
+          }
+        }, 300);
+      }
+    }
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
 
   const calculateExpiration = (index) => {
     const now = new Date();
@@ -253,13 +234,9 @@ export default function Editor() {
         },
       };
 
-      console.log("[midtrans-client] creating transaction, payload:", payload);
       const payRes = await axios.post("/api/site/paid", payload);
-      console.log("[midtrans-client] /api/site/paid response status:", payRes.status);
-      console.log("[midtrans-client] /api/site/paid response data:", payRes.data);
 
       const { token } = payRes.data;
-      console.log("[midtrans-client] received token:", token);
 
       if (!token) {
         alert("Gagal mendapatkan token pembayaran");
@@ -269,11 +246,9 @@ export default function Editor() {
       if (typeof window.snap?.pay === "function") {
         window.snap.pay(token, {
           onSuccess: function (result) {
-            console.log("snap onSuccess:", result);
             alert("Pembayaran berhasil!");
           },
           onPending: function (result) {
-            console.log("snap onPending:", result);
             alert("Menunggu pembayaran...");
           },
           onError: function (result) {

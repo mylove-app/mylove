@@ -1,14 +1,29 @@
 import prisma from "@/lib/prisma";
+import NotFound from "@/app/not-found";
 
 export default async function SitePage({ params }) {
-  const { subdomain } =await params;
+  const { subdomain } = await params;
 
   const site = await prisma.site.findUnique({
     where: { subdomain },
-    include: { template: true }
+    include: { template: true },
   });
 
   if (!site) return <div>Website tidak ditemukan</div>;
+  if (!site.status || site.expiredAt < new Date()) {
+    return (
+      <div>
+        {" "}
+        <NotFound
+          title="Tampilan Tidak Ditemukan!"
+          code="404"
+          message="Oops! Perpanjang atau buat website baru."
+          buttonLabel="Kembali"
+          buttonHref="/"
+        />
+      </div>
+    );
+  }
 
   // ambil template parts
   let html = site.template.html || "";
