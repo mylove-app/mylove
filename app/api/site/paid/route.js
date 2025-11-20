@@ -6,8 +6,10 @@ import { NextResponse } from "next/server";
 const serverKey = process.env.MIDTRANS_SERVER_KEY;
 if (!serverKey) console.error("MIDTRANS_SERVER_KEY is not defined in environment");
 
+// allow toggling production mode via env var MIDTRANS_IS_PRODUCTION (string 'true')
+const isProduction = process.env.MIDTRANS_IS_PRODUCTION === "true";
 let snap = new Midtrans.Snap({
-    isProduction: false, // sandbox
+    isProduction,
     serverKey,
 });
 
@@ -45,7 +47,7 @@ export async function POST(request) {
             ],
             // Merchant URL statis untuk callback
             callbacks: {
-                finish: "https://mylove.my.id/api/payment-callback",
+                finish: "https://mylove.my.id/api/template/paid/callback",
             },
         };
 

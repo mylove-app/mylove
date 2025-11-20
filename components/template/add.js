@@ -54,15 +54,21 @@ export default function Editor() {
   }, [templateId]);
 
   useEffect(() => {
-  const script = document.createElement("script");
-  script.src = "https://app.sandbox.midtrans.com/snap/snap.js"; // sandbox
-  script.setAttribute("data-client-key", process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY);
-  script.async = true;
-  document.body.appendChild(script);
+    const isProd = process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === "true";
+    const script = document.createElement("script");
+    script.src = isProd
+      ? "https://app.midtrans.com/snap/snap.js"
+      : "https://app.sandbox.midtrans.com/snap/snap.js";
+    const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY;
+    if (clientKey) script.setAttribute("data-client-key", clientKey);
+    script.async = true;
+    document.body.appendChild(script);
 
-  script.onload = () => console.log("Snap loaded");
-  script.onerror = () => console.error("Snap failed to load");
-}, []);
+    script.onload = () => console.log("Midtrans Snap script loaded (prod=" + isProd + ")");
+    script.onerror = () => console.error("Midtrans Snap failed to load (prod=" + isProd + ")");
+
+    return () => document.body.removeChild(script);
+  }, []);
 
  
   useEffect(() => {
