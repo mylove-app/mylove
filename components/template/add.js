@@ -70,7 +70,6 @@ export default function Editor() {
 
     script.onload = () => {
       console.log("[midtrans-client] Midtrans Snap script loaded (prod=" + isProd + ")");
-      // log presence of window.snap
       try {
         console.log("[midtrans-client] window.snap present:", !!window.snap);
         if (window.snap) {
@@ -205,8 +204,6 @@ export default function Editor() {
 
     setLoading(true);
 
-    const autoExpiredAt = calculateExpiration(priceIndex);
-
     const formData = new FormData();
     Object.keys(content).forEach((key) => {
       if (content[key] instanceof File) {
@@ -236,7 +233,6 @@ export default function Editor() {
           ...form,
           content: finalContent,
           status: false,
-          expiredAt: autoExpiredAt,
           userId: user.id,
           templateId,
           priceIndex,
@@ -246,7 +242,6 @@ export default function Editor() {
 
       const site = siteRes.data;
 
-      // 2. PANGGIL MIDTRANS
       const payload = {
         id: site.id,
         template: template.name,

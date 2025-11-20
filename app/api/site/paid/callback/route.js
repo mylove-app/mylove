@@ -1,39 +1,54 @@
-export const runtime = "nodejs";
-
 import { NextResponse } from "next/server";
+import Midtrans from "midtrans-client";
 import prisma from "@/lib/prisma";
+
+const core = new Midtrans.CoreApi({
+  isProduction: process.env.MIDTRANS_IS_PRODUCTION === "true",
+  serverKey: process.env.MIDTRANS_SERVER_KEY,
+  clientKey: process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY
+});
+
+function calculateExpired(priceIndex) {
+  const now = new Date();
+   if (priceIndex === 0) now.setDate(now.getDate() + 3);
+  if (priceIndex === 1) now.setDate(now.getDate() + 15);
+  if (priceIndex === 2) now.setDate(now.getDate() + 30); 
+  return now;
+}
 
 export async function POST(request) {
   try {
-    const data = await request.json();
+    const body = await request.json();
+    const notif = await core.transaction.notification(body);
 
-    const {
-      order_id,
-      transaction_status,
-      fraud_status,
-    } = data;
+    const orderId = notif.order_id; // "site-12-1732928829"
+    const transactionStatus = notif.transaction_status;
 
-    const isSuccess =
-      (transaction_status === "capture" && fraud_status === "accept") ||
-      transaction_status === "settlement";
+    const siteId = Number(orderId.split("-")[1]);
 
-    if (!isSuccess) return NextResponse.json({ message: "OK" });
-
-    const siteId = Number(order_id.split("-")[1]);
-    if (!siteId) {
-      return NextResponse.json({ error: "Invalid order_id" }, { status: 400 });
-    }
-
-    await prisma.site.update({
+    // Ambil priceIndex agar tahu durasi expired
+    const site = await prisma.site.findUnique({
       where: { id: siteId },
-      data: { status: true },
     });
 
-    return NextResponse.json({ message: "OK" });
+    if (!site) {
+      return NextResponse.json({ error: "Site not found" }, { status: 404 });
+    }
+
+    if (transactionStatus === "capture" || transactionStatus === "settlement") {
+      const expiredAt = calculateExpired(site.priceIndex);
+
+      await prisma.site.update({
+        where: { id: siteId },
+        data: {
+          status: true,
+          expiredAt: expiredAt,
+        },
+      });
+    }
+
+    return NextResponse.json({ success: true });
   } catch (err) {
-    return NextResponse.json(
-      { error: "Failed to process callback" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
