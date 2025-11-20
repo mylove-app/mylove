@@ -5,28 +5,42 @@ import prisma from "@/lib/prisma";
 const core = new Midtrans.CoreApi({
   isProduction: process.env.MIDTRANS_IS_PRODUCTION === "true",
   serverKey: process.env.MIDTRANS_SERVER_KEY,
-  clientKey: process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY
+  clientKey: process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY,
 });
 
 function calculateExpired(priceIndex) {
   const now = new Date();
-   if (priceIndex === 0) now.setDate(now.getDate() + 3);
+  if (priceIndex === 0) now.setDate(now.getDate() + 3);
   if (priceIndex === 1) now.setDate(now.getDate() + 15);
-  if (priceIndex === 2) now.setDate(now.getDate() + 30); 
+  if (priceIndex === 2) now.setDate(now.getDate() + 30);
   return now;
 }
 
 export async function POST(request) {
   try {
     const body = await request.json();
-    const notif = await core.transaction.notification(body);
+    let notif = body;
 
-    const orderId = notif.order_id; // "site-12-1732928829"
-    const transactionStatus = notif.transaction_status;
+    // Jika request asli dari Midtrans, notif.status_message akan ada
+    if (body.status_message === undefined) {
+      // berarti manual test → skip fetch ke Midtrans API
+      notif = body;
+    } else {
+      // request asli Midtrans
+      notif = await core.transaction.notification(body);
+    }
 
-    const siteId = Number(orderId.split("-")[1]);
+    const { order_id, transaction_status, fraud_status } = notif;
 
-    // Ambil priceIndex agar tahu durasi expired
+    const siteId = Number(order_id.split("-")[1]);
+
+    if (Number.isNaN(siteId)) {
+      return NextResponse.json(
+        { error: "Order ID format invalid, cannot extract siteId" },
+        { status: 400 }
+      );
+    }
+
     const site = await prisma.site.findUnique({
       where: { id: siteId },
     });
@@ -35,20 +49,30 @@ export async function POST(request) {
       return NextResponse.json({ error: "Site not found" }, { status: 404 });
     }
 
-    if (transactionStatus === "capture" || transactionStatus === "settlement") {
+    const isSuccess =
+      transaction_status === "settlement" ||
+      (transaction_status === "capture" && fraud_status === "accept");
+
+    if (isSuccess) {
       const expiredAt = calculateExpired(site.priceIndex);
 
-      await prisma.site.update({
+      const updatedSite = await prisma.site.update({
         where: { id: siteId },
         data: {
           status: true,
-          expiredAt: expiredAt,
+          expiredAt,
         },
       });
+      return NextResponse.json({
+        success: true,
+        message: "Payment processed",
+        site: updatedSite,
+      });
     }
-
-    return NextResponse.json({ success: true });
   } catch (err) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json(
+      { error: err.message || "Unknown error" },
+      { status: 500 }
+    );
   }
 }
