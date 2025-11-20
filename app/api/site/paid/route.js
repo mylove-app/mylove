@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 
 const serverKey = process.env.MIDTRANS_SERVER_KEY;
 if (!serverKey) console.error("[midtrans-route] MIDTRANS_SERVER_KEY is not defined in environment");
-if(serverKey) console.log(`[midtrans-route] MIDTRANS_SERVER_KEY is set: ${serverKey}`);
+if (serverKey) console.log(`[midtrans-route] MIDTRANS_SERVER_KEY is set: ${serverKey}`);
 
 // Toggle production mode via env var
 const isProduction = process.env.MIDTRANS_IS_PRODUCTION === "true";
