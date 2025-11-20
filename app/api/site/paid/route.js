@@ -15,7 +15,12 @@ let snap = new Midtrans.Snap({
 
 export async function POST(request) {
     try {
-        const { id, template, price, customer } = await request.json();
+        const body = await request.json();
+        const { id, template, price, customer } = body;
+
+        console.log("[midtrans-route] incoming request:", JSON.stringify(body));
+        console.log("[midtrans-route] isProduction:", isProduction);
+        console.log("[midtrans-route] serverKey present:", !!serverKey);
 
         const parameter = {
             transaction_details: {
@@ -34,6 +39,7 @@ export async function POST(request) {
                 ? {
                       first_name: customer.name || undefined,
                       email: customer.email || undefined,
+                      phone: customer.phone || undefined,
                   }
                 : undefined,
             // Tambahkan payment methods yang diizinkan
@@ -51,13 +57,19 @@ export async function POST(request) {
             },
         };
 
-        console.log("Midtrans parameter:", JSON.stringify(parameter));
+        console.log("[midtrans-route] Midtrans parameter:", JSON.stringify(parameter));
 
         const token = await snap.createTransactionToken(parameter);
-        console.log("token midtrans:", token);
+        console.log("[midtrans-route] token midtrans:", token);
         return NextResponse.json({ token });
     } catch (err) {
-        console.error("Midtrans createTransactionToken error:", err);
+        console.error("[midtrans-route] createTransactionToken error:", err);
+        try {
+            if (err?.httpStatus) console.error("[midtrans-route] httpStatus:", err.httpStatus);
+            if (err?.apiResponse) console.error("[midtrans-route] apiResponse:", err.apiResponse);
+        } catch (inner) {
+            console.error("[midtrans-route] failed to log nested error details", inner);
+        }
         return NextResponse.json({ error: "Failed to create transaction token" }, { status: 500 });
     }
 }

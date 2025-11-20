@@ -55,37 +55,70 @@ export default function Editor() {
 
   useEffect(() => {
     const isProd = process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === "true";
+    const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || "";
     const script = document.createElement("script");
     script.src = isProd
       ? "https://app.midtrans.com/snap/snap.js"
       : "https://app.sandbox.midtrans.com/snap/snap.js";
-    const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY;
     if (clientKey) script.setAttribute("data-client-key", clientKey);
     script.async = true;
+
+    console.log("[midtrans-client] injecting snap script", { src: script.src, clientKeyPresent: !!clientKey, isProd });
+    if (clientKey) console.log("[midtrans-client] clientKey (truncated):", clientKey.slice(0, 6) + "..." + clientKey.slice(-4));
+
     document.body.appendChild(script);
 
-    script.onload = () => console.log("Midtrans Snap script loaded (prod=" + isProd + ")");
-    script.onerror = () => console.error("Midtrans Snap failed to load (prod=" + isProd + ")");
+    script.onload = () => {
+      console.log("[midtrans-client] Midtrans Snap script loaded (prod=" + isProd + ")");
+      // log presence of window.snap
+      try {
+        console.log("[midtrans-client] window.snap present:", !!window.snap);
+        if (window.snap) {
+          console.log("[midtrans-client] window.snap keys:", Object.keys(window.snap));
+        }
+      } catch (e) {
+        console.error("[midtrans-client] error checking window.snap:", e);
+      }
+    };
 
-    return () => document.body.removeChild(script);
+    script.onerror = (e) => console.error("[midtrans-client] Midtrans Snap failed to load (prod=" + isProd + ")", e);
+
+    // if script is slow, poll for window.snap and log attempts
+    let pollCount = 0;
+    const poll = setInterval(() => {
+      pollCount++;
+      const snapPresent = typeof window.snap?.pay === "function";
+      console.log(`[midtrans-client] poll #${pollCount} window.snap.pay present:`, snapPresent);
+      if (snapPresent || pollCount > 10) clearInterval(poll);
+    }, 300);
+
+    return () => {
+      clearInterval(poll);
+      try { document.body.removeChild(script); } catch {}
+    };
   }, []);
 
  
   useEffect(() => {
       function handleMessage(e) {
+        console.log("[midtrans-client] window message received:", { origin: e.origin, data: e.data });
         if (e.data?.action !== "OPEN_SNAP" || !e.data?.token) return;
 
         const runPay = () => {
+          console.log("[midtrans-client] attempting window.snap.pay - exists?", typeof window.snap?.pay === "function");
           if (typeof window.snap?.pay === "function") {
             window.snap.pay(e.data.token, {
-              onSuccess: function () {
+              onSuccess: function (res) {
+                console.log("[midtrans-client] snap.onSuccess:", res);
                 alert("Pembayaran berhasil!");
               },
-              onPending: function () {
+              onPending: function (res) {
+                console.log("[midtrans-client] snap.onPending:", res);
                 alert("Menunggu pembayaran...");
               },
-              onError: function () {
-                alert("Pembayaran gagal");
+              onError: function (res) {
+                console.error("[midtrans-client] snap.onError:", res);
+                alert("Pembayaran gagal: " + (res?.message || "Unknown error"));
               },
             });
             return true;
@@ -214,19 +247,24 @@ export default function Editor() {
       const site = siteRes.data;
 
       // 2. PANGGIL MIDTRANS
-      const payRes = await axios.post("/api/site/paid", {
+      const payload = {
         id: site.id,
         template: template.name,
         price: Number(template.price[priceIndex]),
         customer: {
           name: user?.name || user?.username || "",
           email: user?.email || "",
+          phone: user?.phone || user?.mobile || undefined,
         },
-      });
+      };
 
-      console.log("payRes.data:", payRes.data);
+      console.log("[midtrans-client] creating transaction, payload:", payload);
+      const payRes = await axios.post("/api/site/paid", payload);
+      console.log("[midtrans-client] /api/site/paid response status:", payRes.status);
+      console.log("[midtrans-client] /api/site/paid response data:", payRes.data);
 
       const { token } = payRes.data;
+      console.log("[midtrans-client] received token:", token);
 
       if (!token) {
         alert("Gagal mendapatkan token pembayaran");
