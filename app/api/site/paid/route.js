@@ -3,11 +3,10 @@ export const runtime = "nodejs";
 import Midtrans from "midtrans-client";
 import { NextResponse } from "next/server";
 
-const productionOnly= process.env.MIDTRANS_IS_PRODUCTION === 'true';
 const snap = new Midtrans.Snap({
-  isProduction: true,
-  serverKey: process.env.MIDTRANS_SERVER_KEY, // HARUS VT-server-...
-  clientKey: process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY // HARUS VT-client-...
+  isProduction: process.env.MIDTRANS_IS_PRODUCTION === 'true',
+  serverKey: process.env.MIDTRANS_SERVER_KEY,
+  clientKey: process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY
 });
 
 export async function POST(request) {
@@ -46,7 +45,7 @@ export async function POST(request) {
       ],
 
       callbacks: {
-        finish: "https://mylove.my.id/api/template/paid/callback",
+        finish: "https://mylove.my.id/site/finish",
       },
     };
 
