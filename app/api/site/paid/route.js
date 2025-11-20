@@ -5,7 +5,6 @@ import { NextResponse } from "next/server";
 
 const serverKey = process.env.MIDTRANS_SERVER_KEY;
 if (!serverKey) console.error("[midtrans-route] MIDTRANS_SERVER_KEY is not defined in environment");
-if (serverKey) console.log(`[midtrans-route] MIDTRANS_SERVER_KEY is set: ${serverKey}`);
 
 // Toggle production mode via env var
 const isProduction = process.env.MIDTRANS_IS_PRODUCTION === "true";
@@ -20,6 +19,7 @@ export async function POST(request) {
     console.log("[midtrans-route] body:", JSON.stringify(body, null, 2));
     console.log("[midtrans-route] isProduction:", isProduction);
     console.log("[midtrans-route] serverKey present:", !!serverKey);
+    console.log(`[midtrans-route] MIDTRANS_SERVER_KEY is set: ${serverKey}`);
 
     const parameter = {
       transaction_details: {
