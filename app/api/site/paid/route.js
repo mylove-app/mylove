@@ -41,7 +41,6 @@ export async function POST(request) {
           }
         : undefined,
       enabled_payments: ["bca_va", "bni_va", "permata_va", "mandiri_va", "qris", "gopay"],
-      // NOTE: callbacks finish terkadang bikin token gagal di prod
       callbacks: {
         finish: "https://mylove.my.id/api/template/paid/callback",
       },
@@ -62,7 +61,6 @@ export async function POST(request) {
     if (err?.apiResponse) console.error("[midtrans-route] apiResponse:", JSON.stringify(err.apiResponse, null, 2));
     if (err?.stack) console.error("[midtrans-route] stack trace:", err.stack);
 
-    // Optional: log nested error if any
     try {
       if (err?.response) console.error("[midtrans-route] response:", JSON.stringify(err.response, null, 2));
     } catch (innerErr) {
