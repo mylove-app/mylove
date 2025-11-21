@@ -44,10 +44,24 @@ export const metadata = {
   },
 };
 
-
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "myLove",
+              "url": "https://mylove.my.id",
+              "logo": "https://mylove.my.id/logo.png",
+            }),
+          }}
+        />
+      </head>
+
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
@@ -57,3 +71,4 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
+
