@@ -25,11 +25,13 @@ export default async function SitePage({ params }) {
   }
 
   let html = site.template.html || "";
-  const css = site.template.css || "";
-  const js = site.template.js || "";
+  let css = site.template.css || "";
+  let js = site.template.js || "";
 
   Object.entries(site.content).forEach(([key, value]) => {
     html = html.replace(new RegExp(`{{${key}}}`, "g"), value);
+    css = css.replace(new RegExp(`{{${key}}}`, "g"), value);
+    js = js.replace(new RegExp(`{{${key}}}`, "g"), value);
   });
 
   return (
