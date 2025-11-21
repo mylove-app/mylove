@@ -50,10 +50,10 @@ export default function ConfirmationModal({
             exit={{ opacity: 0, scale: 0.9, y: 30 }}
             transition={{ type: "spring", stiffness: 200, damping: 20 }}
           >
-            <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-xl w-full max-w-sm p-6 text-center relative">
+            <div className="bg-background rounded-2xl shadow-xl w-full max-w-sm p-6 text-center relative">
               <div className="flex justify-center mb-3">{getIcon()}</div>
 
-              <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
+              <h2 className="text-lg font-semibold text-gray-800">
                 {title}
               </h2>
               <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm">

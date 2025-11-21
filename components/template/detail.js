@@ -202,7 +202,9 @@ export default function TemplateDetail() {
               Gunakan Template
             </button>
 
-            <button className="w-full md:w-1/2 bg-primary text-white py-3 rounded-xl font-medium hover:bg-primary/80 transition">
+            <button
+            onClick={() => router.push(`https://${template.name}.mylove.my.id`)}
+            className="w-full md:w-1/2 bg-primary text-white py-3 rounded-xl font-medium hover:bg-primary/80 transition">
               Lihat Preview
             </button>
           </div>

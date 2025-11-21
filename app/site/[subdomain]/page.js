@@ -9,8 +9,7 @@ export default async function SitePage({ params }) {
     include: { template: true },
   });
 
-  if (!site) return <div>Website tidak ditemukan</div>;
-  if (!site.status || site.expiredAt < new Date()) {
+  if (!site ||site.status === false || !site.expiredAt || site.expiredAt < new Date()) {
     return (
       <div>
         {" "}
@@ -25,12 +24,10 @@ export default async function SitePage({ params }) {
     );
   }
 
-  // ambil template parts
   let html = site.template.html || "";
   const css = site.template.css || "";
   const js = site.template.js || "";
 
-  // replace {{variable}} di dalam HTML
   Object.entries(site.content).forEach(([key, value]) => {
     html = html.replace(new RegExp(`{{${key}}}`, "g"), value);
   });

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import axios from "axios";
-import Image from "next/image";
+import ConfirmationModal from "../reusable/confirmModal";
 import ImageUploadButton from "@/components/reusable/imageUpload";
 import { extractFields } from "@/lib/extractField";
 import { useParams } from "next/navigation";
@@ -12,6 +12,8 @@ export default function Editor() {
   const [template, setTemplate] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [modalConfig, setModalConfig] = useState({});
 
   const [content, setContent] = useState({});
   const [form, setForm] = useState({
@@ -29,7 +31,18 @@ export default function Editor() {
         });
         setUser(res.data.user);
       } catch {
-        alert("Silakan login terlebih dahulu");
+        setModalConfig({
+          mode: "warning",
+          title: "Akses Ditolak!",
+          description: "Silakan login terlebih dahulu.",
+          confirmText: "Login",
+          cancelText: false,
+          onConfirm: () => {
+            window.location.href = "/auth";
+            setOpen(false);
+          },
+        });
+        setOpen(true);
       }
     }
     fetchUser();
@@ -47,7 +60,15 @@ export default function Editor() {
         fields.forEach((key) => (initialContent[key] = ""));
         setContent(initialContent);
       } catch (err) {
-        console.error(err);
+        setModalConfig({
+          mode: "error",
+          title: "Gagal Memuat Template",
+          description: "Terjadi kesalahan saat memuat template.",
+          cancelText: false,
+          confirmText: "Tutup",
+          onConfirm: () => setOpen(false),
+        });
+        setOpen(true);
       }
     }
     loadTemplate();
@@ -69,7 +90,6 @@ export default function Editor() {
 
     script.onerror = () => {};
 
-    // if script is slow, poll for window.snap and log attempts
     let pollCount = 0;
     const poll = setInterval(() => {
       pollCount++;
@@ -93,13 +113,37 @@ export default function Editor() {
         if (typeof window.snap?.pay === "function") {
           window.snap.pay(e.data.token, {
             onSuccess: function (res) {
-              alert("Pembayaran berhasil!");
+              setModalConfig({
+                mode: "success",
+                title: "Pembayaran Berhasil!",
+                description: "Terima kasih, pembayaran Anda berhasil.",
+                cancelText: false,
+                confirmText: "OK",
+                onConfirm: () => setOpen(false),
+              });
+              setOpen(true);
             },
             onPending: function (res) {
-              alert("Menunggu pembayaran...");
+              setModalConfig({
+                mode: "warning",
+                title: "Menunggu Pembayaran",
+                description: "Silakan selesaikan pembayaran di halaman Midtrans.",
+                cancelText: false,
+                confirmText: "OK",
+                onConfirm: () => setOpen(false),
+              });
+              setOpen(true);
             },
             onError: function (res) {
-              alert("Pembayaran gagal: " + (res?.message || "Unknown error"));
+              setModalConfig({
+                mode: "error",
+                title: "Pembayaran Gagal",
+                description: "Terjadi kesalahan: " + (res?.message || "Unknown error"),
+                cancelText: false,
+                confirmText: "Tutup",
+                onConfirm: () => setOpen(false),
+              });
+              setOpen(true);
             },
           });
           return true;
@@ -114,7 +158,15 @@ export default function Editor() {
           if (runPay() || attempts > 10) {
             clearInterval(iv);
             if (attempts > 10 && typeof window.snap?.pay !== "function") {
-              alert("Gagal memuat Midtrans Snap. Silakan coba lagi nanti.");
+              setModalConfig({
+                mode: "error",
+                title: "Pembayaran Gagal",
+                description: "Terjadi kesalahan saat memproses pembayaran.",
+                cancelText: false,
+                confirmText: "Tutup",
+                onConfirm: () => setOpen(false),
+              });
+              setOpen(true);
             }
           }
         }, 300);
@@ -124,14 +176,6 @@ export default function Editor() {
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
   }, []);
-
-  const calculateExpiration = (index) => {
-    const now = new Date();
-    if (index === 0) now.setDate(now.getDate() + 3);
-    else if (index === 1) now.setDate(now.getDate() + 7);
-    else if (index === 2) now.setMonth(now.getMonth() + 1);
-    return now.toISOString();
-  };
 
   const previewHTML = useMemo(() => {
     if (!template) return "";
@@ -177,11 +221,44 @@ export default function Editor() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.name || !form.subdomain)
-      return alert("Nama dan subdomain wajib diisi");
+    if (!form.name || !form.subdomain) {
+      setModalConfig({
+        mode: "warning",
+        title: "Form Tidak Lengkap",
+        description: "Nama dan subdomain wajib diisi.",
+        cancelText: false,
+        confirmText: "OK",
+        onConfirm: () => setOpen(false),
+      });
+      setOpen(true);
+      return;
+    }
 
-    if (priceIndex === null) return alert("Pilih durasi paket terlebih dahulu");
-    if (!user?.id) return alert("User tidak ditemukan");
+    if (priceIndex === null) {
+      setModalConfig({
+        mode: "warning",
+        title: "Durasi Belum Dipilih",
+        description: "Pilih durasi paket terlebih dahulu.",
+        cancelText: false,
+        confirmText: "OK",
+        onConfirm: () => setOpen(false),
+      });
+      setOpen(true);
+      return;
+    }
+
+    if (!user?.id) {
+      setModalConfig({
+        mode: "error",
+        title: "User Tidak Ditemukan",
+        description: "Silakan login kembali.",
+        cancelText: false,
+        confirmText: "OK",
+        onConfirm: () => setOpen(false),
+      });
+      setOpen(true);
+      return;
+    }
 
     setLoading(true);
 
@@ -207,7 +284,6 @@ export default function Editor() {
     });
 
     try {
-      // 1. SIMPAN WEBSITE
       const siteRes = await axios.post(
         "/api/site",
         {
@@ -239,30 +315,67 @@ export default function Editor() {
       const { token } = payRes.data;
 
       if (!token) {
-        alert("Gagal mendapatkan token pembayaran");
+        setModalConfig({
+          mode: "error",
+          title: "Gagal Mendapatkan Token",
+          description: "Tidak dapat memproses pembayaran.",
+          cancelText: false,
+          confirmText: "Tutup",
+          onConfirm: () => setOpen(false),
+        });
+        setOpen(true);
         return;
       }
-      // If the Snap client is already available, call it directly.
+
       if (typeof window.snap?.pay === "function") {
         window.snap.pay(token, {
           onSuccess: function (result) {
-            alert("Pembayaran berhasil!");
+            setModalConfig({
+              mode: "success",
+              title: "Pembayaran Berhasil!",
+              description: "Terima kasih, pembayaran Anda berhasil.",
+              cancelText: false,
+              confirmText: "OK",
+              onConfirm: () => setOpen(false),
+            });
+            setOpen(true);
           },
           onPending: function (result) {
-            alert("Menunggu pembayaran...");
+            setModalConfig({
+              mode: "warning",
+              title: "Menunggu Pembayaran",
+              description: "Silakan selesaikan pembayaran di halaman Midtrans.",
+              cancelText: false,
+              confirmText: "OK",
+              onConfirm: () => setOpen(false),
+            });
+            setOpen(true);
           },
           onError: function (result) {
-            console.error("snap onError:", result);
-            alert("Pembayaran gagal: " + (result?.message || "Unknown error"));
+            setModalConfig({
+              mode: "error",
+              title: "Pembayaran Gagal",
+              description: "Terjadi kesalahan: " + (result?.message || "Unknown error"),
+              cancelText: false,
+              confirmText: "Tutup",
+              onConfirm: () => setOpen(false),
+            });
+            setOpen(true);
           },
         });
       } else {
-        // fallback to postMessage which our message listener will handle and retry
         window.postMessage({ action: "OPEN_SNAP", token }, "*");
       }
     } catch (err) {
-      console.error(err.response?.data || err.message);
-      alert("Gagal membuat website");
+      setModalConfig({
+        mode: "error",
+        title: "Gagal Membuat Website",
+        description: "Terjadi kesalahan saat membuat website.",
+        cancelText: false,
+        confirmText: "Tutup",
+        onConfirm: () => setOpen(false),
+      });
+      setOpen(true);
     }
 
     setLoading(false);
@@ -284,6 +397,12 @@ export default function Editor() {
 
   return (
     <div className="h-[88vh] w-full flex overflow-hidden relative">
+      <ConfirmationModal
+        open={open}
+        onClose={() => setOpen(false)}
+        {...modalConfig}
+      />
+
       <div className="w-[350px] h-[85vh] bg-white p-4 overflow-y-auto absolute left-0 top-0 z-20">
         <h2 className="text-xl font-semibold">{template.name}</h2>
 
@@ -330,7 +449,6 @@ export default function Editor() {
             </label>
 
             <div className="flex gap-3 items-center justify-center">
-              {/* 3 HARI */}
               <button
                 type="button"
                 onClick={() => setPriceIndex(0)}
@@ -341,7 +459,6 @@ export default function Editor() {
                 3 Hari
               </button>
 
-              {/* 7 HARI */}
               <button
                 type="button"
                 onClick={() => setPriceIndex(1)}
